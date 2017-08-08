@@ -1,12 +1,21 @@
-import '../scss/main.scss';
+import * as m from 'mithril';
 
-class Greeter {
-    constructor(public greeting: string) { }
-    greet() {
-        return '<h1>' + this.greeting + '</h1>';
+import '../scss/main.scss';
+import Kifu from './kifu';
+
+
+//const greeter = new Greeter('Hello, my friend! Checkout your first ts app!');
+//document.body.innerHTML = greeter.greet();
+
+class KifuApp {
+    constructor(){
+        console.log("use kifu component");
+
+        window.onload = ()=>{
+            console.log('this is awesome app');
+            m.route(document.body,'/',{'/':new Kifu()});
+        }
     }
 }
 
-const greeter = new Greeter('Hello, my friend! Checkout your first ts app!');
-
-document.body.innerHTML = greeter.greet();
+new KifuApp();

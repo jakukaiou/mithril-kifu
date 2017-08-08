@@ -42,7 +42,7 @@ module.exports = function(config) {
       module: {
         loaders: [{
           test: /\.ts$/,
-          loader: "ts-loader"
+          loader: "awesome-typescript-loader"
         }]
       }
     },
