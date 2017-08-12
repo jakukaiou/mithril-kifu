@@ -66,10 +66,9 @@
     ],
     "max-line-length": [
       true,
-      100
+      300
     ],
     "no-require-imports": false,
-    "no-trailing-whitespace": true,
     "object-literal-sort-keys": false,
     "trailing-comma": [
       true,
@@ -111,7 +110,7 @@
     ],
     "whitespace": [
       true,
-      "check-branch",
+      // "check-branch",
       "check-decl",
       "check-operator",
       "check-separator",

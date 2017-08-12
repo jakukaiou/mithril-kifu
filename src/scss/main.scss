@@ -1,10 +1,20 @@
 @import 'normalize/import-now';
 @import "mixins";
 @import "config";
-// Main Components
+// 運用上の注意: 使用する画像をbuild/配下にも置く
 h1 {
     color: $color-primary;
     background: $background-color-primary;
     border-radius: $border-radius;
     padding: 2rem;
+}
+
+.koma_prop_fu {
+    background: url('/images/koma/Sfu.png');
+}
+
+.koma_piece {
+    flex: 1;
+    width: 43px;
+    height: 48px;
 }

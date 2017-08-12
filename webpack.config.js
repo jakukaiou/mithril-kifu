@@ -3,6 +3,8 @@ var outputPath = path.resolve(__dirname, 'build');
 var sassPath = path.resolve(__dirname, 'src/scss');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var StyleLintPlugin = require('stylelint-webpack-plugin');
+var WebpackObfuscator = require('webpack-obfuscator');
+var webpack = require('webpack');
 
 module.exports = {
     entry: {
@@ -20,7 +22,7 @@ module.exports = {
             path.join(__dirname, 'src'),
             'node_modules'
         ],
-        extensions: ['*', '.ts', '.webpack.js', '.web.js', '.js']
+        extensions: ['.jpg', '.png', '.ts', '.webpack.js', '.web.js', '.js']
     },
     devtool: 'source-map',
     module: {
@@ -43,6 +45,10 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
+                test: /\.(png|jpg)$/,
+                loader: 'file-loader?name=../[path][name].[ext]'
+            },
+            {
                 test: /\.scss$/,
                 use: ExtractTextPlugin.extract({
                     fallback: 'style-loader',
@@ -50,14 +56,18 @@ module.exports = {
                         {
                             loader: 'css-loader',
                             options: {
-                                importLoaders: 1
+                                importLoaders: 1,
+                                sourceMap:true
                             }
                         },
                         {
-                            loader: 'postcss-loader'
+                            loader: 'postcss-loader?sourceMap'
                         },
                         {
-                            loader: 'sass-loader',
+                            loader: 'resolve-url-loader'
+                        },
+                        {
+                            loader: 'sass-loader?sourceMap',
                             options: {
                                 includePaths: [
                                     sassPath,
@@ -77,6 +87,15 @@ module.exports = {
           syntax: 'scss',
           files: ['**/*.s?(a|c)ss'],
           failOnError: false,
+        }),
+        new webpack.optimize.OccurrenceOrderPlugin(),
+        new webpack.optimize.UglifyJsPlugin({
+        compress: {
+            warnings: false
+        }
+        }),
+        new WebpackObfuscator ({
+            rotateUnicodeArray: true,
         })
     ]
 }
