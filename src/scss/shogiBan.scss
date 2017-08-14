@@ -1,0 +1,77 @@
+@import "mixins";
+@import "koma";
+
+.c-shogiBan {
+    flex: 1;
+}
+
+// 将棋盤のマス目画像レイヤー
+.c-shogiBan_grid {
+    position: absolute;
+    left: 0;
+    width: 410px;
+    height: 454px;
+    z-index: 100;
+
+    @include picture('/images/grid/masu_dot_xy.png');
+}
+
+// 将棋盤の最背面レイヤー
+.c-shogiBan_bg {
+    width: 604px;
+    height: 454px;
+    padding-left: 0;
+    background-color: #874824;
+}
+
+// 将棋盤の材質画像レイヤー
+.c-shogiBan_base {
+    position: absolute;
+    left: 0;
+    width: 410px;
+    height: 454px;
+    z-index: 90;
+
+    @include picture('/images/ban/ban_kaya_a.png');
+}
+
+// 将棋盤の駒部分レイヤー
+.c-shogiBan_koma {
+    display: flex;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 110;
+}
+
+.c-shogiBan_hand_place {
+    width: 172px;
+    margin-left: 24px;
+}
+
+.c-shogiBan_hand {
+    height: 192px;
+
+    // 影の描写
+    box-shadow: 4px 4px 7px 0 #253842;
+}
+
+.c-shogiBan_hand_base {
+    position: absolute;
+}
+
+.c-shogiBan_hand_pieces {
+    position: absolute;
+    z-index: 20;
+}
+
+.c-shogiBan_oppo_hand {
+    margin-bottom: 48px;
+}
+
+.c-shogiBan_hand_base {
+    width: 172px;
+    height: 192px;
+
+    @include picture('/images/ban/koma_hold.png');
+}

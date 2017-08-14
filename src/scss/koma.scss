@@ -1,0 +1,139 @@
+@import "mixins";
+
+.c-koma_piece {
+    flex: 1;
+    width: 43px;
+    height: 48px;
+}
+
+.c-koma_prop_fu {
+    @include picture('/images/koma/Sfu.png');
+}
+
+.c-koma_prop_to {
+    @include picture('/images/koma/Sto.png');
+}
+
+.c-koma_prop_kyo {
+    @include picture('/images/koma/Skyo.png');
+}
+
+.c-koma_prop_nkyo {
+    @include picture('/images/koma/Snkyo.png');
+}
+
+.c-koma_prop_kei {
+    @include picture('/images/koma/Skei.png');
+}
+
+.c-koma_prop_nkei {
+    @include picture('/images/koma/Snkei.png');
+}
+
+.c-koma_prop_gin {
+    @include picture('/images/koma/Sgin.png');
+}
+
+.c-koma_prop_ngin {
+    @include picture('/images/koma/Sngin.png');
+}
+
+.c-koma_prop_kin {
+    @include picture('/images/koma/Skin.png');
+}
+
+.c-koma_prop_hisha {
+    @include picture('/images/koma/Shi.png');
+}
+
+.c-koma_prop_ryu {
+    @include picture('/images/koma/Sryu.png');
+}
+
+.c-koma_prop_kaku {
+    @include picture('/images/koma/Skaku.png');
+}
+
+.c-koma_prop_uma {
+    @include picture('/images/koma/Suma.png');
+}
+
+.c-koma_prop_ou {
+    @include picture('/images/koma/Sou.png');
+}
+
+
+.c-koma_oppo_fu {
+    @include picture('/images/koma/Gfu.png');
+}
+
+.c-koma_oppo_to {
+    @include picture('/images/koma/Gto.png');
+}
+
+.c-koma_oppo_kyo {
+    @include picture('/images/koma/Gkyo.png');
+}
+
+.c-koma_oppo_nkyo {
+    @include picture('/images/koma/Gnkyo.png');
+}
+
+.c-koma_oppo_kei {
+    @include picture('/images/koma/Gkei.png');
+}
+
+.c-koma_oppo_nkei {
+    @include picture('/images/koma/Gnkei.png');
+}
+
+.c-koma_oppo_gin {
+    @include picture('/images/koma/Ggin.png');
+}
+
+.c-koma_oppo_ngin {
+    @include picture('/images/koma/Gngin.png');
+}
+
+.c-koma_oppo_kin {
+    @include picture('/images/koma/Gkin.png');
+}
+
+.c-koma_oppo_hisha {
+    @include picture('/images/koma/Ghi.png');
+}
+
+.c-koma_oppo_ryu {
+    @include picture('/images/koma/Gryu.png');
+}
+
+.c-koma_oppo_kaku {
+    @include picture('/images/koma/Gkaku.png');
+}
+
+.c-koma_oppo_uma {
+    @include picture('/images/koma/Guma.png');
+}
+
+.c-koma_oppo_ou {
+    @include picture('/images/koma/Gou.png');
+}
+
+.c-koma_row {
+    display: flex;
+}
+
+.c-koma_piece_base {
+    position: relative;
+}
+
+.c-koma_piece_num {
+    position: absolute;
+    color: #ff4898;
+    font-size: 18px;
+    font-weight: bold;
+    right: 2px;
+    top: -2px;
+    text-shadow: 1px 1px 1px #000, -1px 1px 1px #000, 1px -1px 1px #000, -1px -1px 1px #000;
+    z-index: 120;
+}

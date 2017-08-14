@@ -51,26 +51,26 @@ class KomaState {
  */
 export default class KifuData {
 
+    // 盤面の表示配列 (盤面へはメソッドを介してアクセスする)
+    public board;
+    
+    // 持ち駒の情報 [0]は先手、[1]は後手
+    public hands;
+
+    // 現在の指し手についているコメント
+    public comment;
+
     // 初期の盤面配列
     private initBoard;
 
     // 初期の持ち駒
     private initHands;
 
-    // 盤面の表示配列 (盤面へはメソッドを介してアクセスする)
-    private board;
-    
-    // 持ち駒の情報 [0]は先手、[1]は後手
-    private hands;
-
     // 現在の手番 先手or後手
     private color;
 
     // 現在の指し手番号
     private _moveNum;
-
-    // 現在の指し手についているコメント
-    private comment;
 
     // movesから作成した現在の指し手配列
     private moveArray;
@@ -79,11 +79,11 @@ export default class KifuData {
     private moves;
 
     // 編集モードかどうか
-    private isEdit;
+    private mode;
 
-    constructor(jkfData: Object,isEdit: boolean) {
+    constructor(jkfData: Object, mode: number) {
 
-        this.isEdit = isEdit;
+        this.mode = mode;
 
         // 平手状態
         this.initBoard = 
@@ -260,11 +260,22 @@ export default class KifuData {
                         break;
                     case 'OTHER':  // その他
                         if(_.has(jkfData['initial'], 'data')) {
+                            // 初期盤面のセット
                             if(_.has(jkfData['initial']['data'], 'board')) {
                                 this.initBoard = _.cloneDeep(jkfData['initial']['data']['board']);
                             }else {
                                 // otherプリセット用の初期盤面データがない場合はエラー
                                 throw new KifuDataError('jkf OTHER preset board not defined');
+                            }
+
+                            // 初期持ち駒のセット
+                            if(_.has(jkfData['initial']['data'], 'hands')) {
+                                this.initHands = _.cloneDeep(jkfData['initial']['data']['hands']);
+                            }
+
+                            // 初期手番のセット
+                            if(_.has(jkfData['initial']['data'], 'color')) {
+                                this.color = jkfData['initial']['data']['color'];
                             }
                         }else {
                             // otherプリセット用の初期データがない場合はエラー
@@ -305,7 +316,7 @@ export default class KifuData {
      * 
      */
      public setMove() {
-        if(this.isEdit){
+        if(this.mode === SHOGI.MODE.EDIT) {
 
         }else {
             throw new KifuDataError('not permit edit');
@@ -315,11 +326,16 @@ export default class KifuData {
     /**
      * 与えられた指し手番号の盤面に更新
      * 
-     * @param moveum: 指し手番号
+     * @param moveNum: 指し手番号
      * 
      */
     public set moveNum(moveNum: number) {
+        // 更新後の指し手が現在のものと異なる場合のみ更新処理を行う
+        if(this._moveNum !== moveNum){
 
+        }else{
+            return;
+        }
     }
 
     /**

@@ -1,13 +1,14 @@
 import * as m from 'mithril';
 
 import '../scss/main.scss';
-import Kifu from './kifu';
+import KifuApp from './kifuApp';
+import * as SHOGI from './shogi';
 
-class KifuApp {
+class KifuControlApp {
     constructor(jkfData: Object ) {
 
         window.onload = () => {
-            m.route(document.body, '/', {'/': new Kifu(jkfData)});
+            m.route(document.body, '/', {'/': new KifuApp(jkfData, SHOGI.MODE.VIEW)});
         };
     }
 }
@@ -45,23 +46,21 @@ const jkfData = {
                 // hands[0]は先手の持ち駒、hands[1]は後手の持ち駒
                 hands: [
                     {
-                        /*
-                        'KY':1,
-                        'KE':2,
-                        'FU':3,
-                        'KA':2,
-                        'GI':5,
-                        */
+                        
+                        'KY': 1,
+                        'KE': 2,
+                        'FU': 3,
+                        'KA': 2,
+                        'GI': 5,
+                        
                     },
                     {
-                        /*
-                        'HI':1,
-                        'FU':2
-                        */
+                        'HI': 1,
+                        'FU': 2
                     }
                 ]
             },
     }
 };
 
-new KifuApp(jkfData);
+new KifuControlApp(jkfData);

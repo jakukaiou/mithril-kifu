@@ -1,20 +1,30 @@
-@import 'normalize/import-now';
-@import "mixins";
-@import "config";
 // 運用上の注意: 使用する画像をbuild/配下にも置く
-h1 {
-    color: $color-primary;
-    background: $background-color-primary;
-    border-radius: $border-radius;
-    padding: 2rem;
+@import 'normalize/import-now';
+@import '../../node_modules/bulma/bulma.sass';
+@import "mixins";
+@import "vars";
+@import 'shogiBan';
+@import 'toolbar';
+@import 'kifu';
+
+// 棋譜表示コンポーネントのコンテナ
+.c-kifuPlayer {
+    margin-top: 20px;
+    margin-left: 20px;
+    width: 756px;
+    height: 532px;
+    position: relative;
+    display: flex;
+
+    @include border(#000);
 }
 
-.koma_prop_fu {
-    background: url('/images/koma/Sfu.png');
+//棋譜表示コンポーネントのインナークラス
+.c-kifuPlayer_inner {
+    height: 530px;
 }
 
-.koma_piece {
-    flex: 1;
-    width: 43px;
-    height: 48px;
+//ツールバー、コメント欄用のコンテナクラス
+.c-kifuPlayer_inner2 {
+    display: flex;
 }
