@@ -44,13 +44,13 @@ export class Util {
      * 
      * @return Array
      */
-    public static objChunk(object: Object, chunkNum: number){
+    public static objChunk(object: Object, chunkNum: number) {
         const array = [];
 
         let count = 0;
         let tmpObj = null;
 
-        _.each(object, (value,key) => {
+        _.each(object, (value, key) => {
             if(count === 0) {
                 let partObj = {};
                 tmpObj = partObj;

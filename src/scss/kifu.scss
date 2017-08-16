@@ -10,3 +10,37 @@
     background-color: #141414;
     height: 18px;
 }
+
+.c-kifu_list {
+    color: #141414;
+    background-color: #e4e2f0;
+    height: 512px;
+    overflow-y: scroll;
+}
+
+.c-kifu_row {
+    font-size: 15px;
+    border-bottom: groove rgba(0, 0, 0, 0.3) 1px;
+    display: flex;
+    height: 24px;
+    align-items: center;
+    color: #202686;
+}
+
+.c-kifu_row.is-active {
+    color: #fff;
+    background-color: #82b2ff;
+}
+
+.c-kifu_move_info {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.c-kifu_number {
+    text-align: right;
+    font-size: 12px;
+    width: 30px;
+    padding-right: 4px;
+}

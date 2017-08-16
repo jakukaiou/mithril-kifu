@@ -82,16 +82,24 @@ class KifuList extends ComponentBasic {
     constructor(kifuData: KifuData, mode: number) {
         super();
 
-        this.view = ()=>{
+        this.view = () => {
             return [
-                m('div',{class: c('c-kifu_container')}, [
+                m('div', {class: c('c-kifu_container')}, [
                     m('div', {class: c('c-kifu_title')}, '棋譜情報'),
                     m('div', {class: c('c-kifu_list')}, [
-                        
+                        _.map(kifuData.moveArray, (moveInfo, num) => {
+                            return [
+                                m('div', {class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null)},[
+                                    m('div',{class: c('c-kifu_move_info')},[
+                                        m('div',{class: c('c-kifu_number')}, num + ':'),
+                                    ])
+                                ])
+                            ]
+                        })
                     ])
                 ])
             ];
-        }
+        };
     }
 }
 
@@ -105,16 +113,16 @@ class ToolButton extends ComponentBasic {
 
         this.view = () => {
             return [
-                m('a',{
+                m('a', {
                     class: c('button'),
                     onclick: onclickFunc
-                },[
-                    m('span', {class: c('icon', (isSmall) ? 'is-small' : null)},[
+                }, [
+                    m('span', {class: c('icon', (isSmall) ? 'is-small' : null)}, [
                         m('i', {class: c('fa', faClass)})
                     ])
                 ]),
-            ]
-        }
+            ]; 
+        };
     }
 }
 
@@ -132,17 +140,17 @@ class KifuToolBar extends ComponentBasic {
                 m('div', {class: c('c-tool_button')}, [
                     m('div', {class: c('c-tool_button_container')}, [
                         m(new ToolButton('fa-fast-backward', () => {
-                            console.log('oh button click');
-                        },true)),
+                            
+                        }, true)),
                         m(new ToolButton('fa-chevron-left', () => {
 
-                        },true)),
+                        }, true)),
                         m(new ToolButton('fa-chevron-right', () => {
 
-                        },true)),
+                        }, true)),
                         m(new ToolButton('fa-fast-forward', () => {
 
-                        },true)),
+                        }, true)),
                     ])
                 ])
             ];

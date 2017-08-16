@@ -52,13 +52,16 @@ class KomaState {
 export default class KifuData {
 
     // 盤面の表示配列 (盤面へはメソッドを介してアクセスする)
-    public board;
+    private _board;
     
     // 持ち駒の情報 [0]は先手、[1]は後手
-    public hands;
+    private _hands;
 
-    // 現在の指し手についているコメント
-    public comment;
+    // movesから作成した現在の指し手配列
+    private _moveArray;
+
+    // 現在の各分岐点における分岐インデックスの配列
+    private forkPoint: {[key: number]: number;};
 
     // 初期の盤面配列
     private initBoard;
@@ -69,11 +72,11 @@ export default class KifuData {
     // 現在の手番 先手or後手
     private color;
 
+    // 現在のコメント
+    private _comment;
+
     // 現在の指し手番号
     private _moveNum;
-
-    // movesから作成した現在の指し手配列
-    private moveArray;
 
     // 指し手の配列
     private moves;
@@ -85,6 +88,18 @@ export default class KifuData {
 
         this.mode = mode;
 
+        // 指し手情報のコピー
+        if(_.has(jkfData, 'moves')) {
+            this.moves = _.cloneDeep(jkfData['moves']);
+        }else {
+            this.moves = [];
+        }
+
+        this._moveArray = [];
+        this.forkPoint = {};
+        // 全てのforkを0として初期の分岐を作成
+        this.makeInitialMove(this.moves, this.moveArray, this.forkPoint);
+        
         // 平手状態
         this.initBoard = 
         [
@@ -104,7 +119,8 @@ export default class KifuData {
         // 初期の指し手
         this._moveNum = 0;
 
-        this.comment = '';
+        // 初期のコメント
+        this._comment = '';
 
         // 特殊な初期状態が登録されているか判定
         if(_.has(jkfData, 'initial')) {
@@ -293,10 +309,8 @@ export default class KifuData {
         }
         
         // 初期盤面を現在盤面にコピー
-        this.board = _.cloneDeep(this.initBoard);
-        this.hands = _.cloneDeep(this.initHands);
-
-
+        this._board = _.cloneDeep(this.initBoard);
+        this._hands = _.cloneDeep(this.initHands);
     }
 
     /**
@@ -331,20 +345,102 @@ export default class KifuData {
      */
     public set moveNum(moveNum: number) {
         // 更新後の指し手が現在のものと異なる場合のみ更新処理を行う
-        if(this._moveNum !== moveNum){
+        if(this._moveNum !== moveNum) {
 
-        }else{
+            /*
+            if(this.moves){
+                //コメントの更新
+                if(_.has(this.moves[moveNum], 'message')) {
+                    this.comment = this.moves[moveNum]['message'];
+                }
+            }
+            */
+        } else {
             return;
         }
     }
 
     /**
-     * 現在の指し手番号を返す
+     * 現在の盤面を返す
      * 
+     * @return Array<Array<Object>>
+     */
+    public get board(): Array<Array<Object>> {
+        return this._board;
+    }
+
+    /**
+     * 現在の両者持ち駒を返す
+     * 
+     * @return Array<Object>
+     */
+    public get hands(): Array<Object> {
+        return this._hands;
+    }
+
+    /**
+     * 現在の指し手番号を返す
      * 
      * @return number
      */
     public get moveNum(): number {
         return this._moveNum;
+    }
+
+    /**
+     * 現在の指し手のコメントを返す
+     * 
+     * @return string
+     */
+    public get comment(): string {
+        return this._comment;
+    }
+
+    /**
+     * 現在の指し手配列を返す
+     * 
+     * @return number
+     */
+     public get moveArray(): Array<Object> {
+         return this._moveArray;
+     }
+
+    /**
+     * moveArray, forkPointの初期値を設定
+     * 
+     * @param moves: 指し手データ
+     * 
+     */
+    public makeInitialMove(moves: Array<Object>, _moveArray: Array<Object>, forkPoint: {[key: number]: number; }) {
+        const moveLength = moves.length;
+
+        for(let i = 0; i < moveLength ; i++) {
+            _moveArray.push(moves[i]);
+            if(_.has(moves[i], 'forks')) {
+                forkPoint[i] = 0;
+            }
+        }
+    }
+
+    /**
+     * 指し手分岐をスイッチする
+     * 
+     * @param moveNum: 指し手番号
+     * @param forkNum: 分岐番号
+     * 
+     */
+    public switchFork(moveNum: number, forkNum: number) {
+
+    }
+
+    /**
+     * 指し手オブジェクトを棋譜リストコンポーネント上で扱いやすいオブジェクトに変換して返す
+     * 
+     * @param move: 指し手オブジェクト
+     * 
+     * @return Object
+     */
+    public convertMoveListObject(move: Object){
+        //この中で7六歩のような文字列表現も作成する
     }
 }
