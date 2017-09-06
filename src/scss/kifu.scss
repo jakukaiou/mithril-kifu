@@ -15,7 +15,10 @@
     color: #141414;
     background-color: #e4e2f0;
     height: 512px;
+    width: 150px;
     overflow-y: scroll;
+    position: absolute;
+    z-index: 200;
 }
 
 .c-kifu_row {
@@ -43,4 +46,65 @@
     font-size: 12px;
     width: 30px;
     padding-right: 4px;
+}
+
+.c-kifu_move {
+    flex: 1;
+}
+
+.c-kifu_notation {
+    margin-left: auto;
+    padding: 8px;
+    font-size: 10px;
+}
+
+.c-kifu_notation_branch {
+    cursor: pointer;
+}
+
+.c-kifu_fork {
+    height: 512px;
+    width: 150px;
+    position: absolute;
+    z-index: 220;
+    display: none;
+}
+
+.c-kifu_fork.is-active {
+    display: block;
+}
+
+.c-kifu_fork .c-kifu_row {
+    background-color: #ff82b2;
+}
+
+.c-kifu_forkRow {
+    cursor: pointer;
+}
+
+.c-kifu_select {
+    font-size: 15px;
+    border-bottom: groove rgba(0, 0, 0, 0.3) 1px;
+    display: flex;
+    height: 24px;
+    align-items: center;
+    color: #fff;
+}
+
+.c-kifu_select_close {
+    cursor: pointer;
+}
+
+.c-kifu_blackOut {
+    background-color: #000;
+    opacity: 0.4;
+    height: 512px;
+    width: 150px;
+    position: absolute;
+    z-index: 210;
+    display: none;
+}
+
+.c-kifu_blackOut.is-active {
+    display: block;
 }

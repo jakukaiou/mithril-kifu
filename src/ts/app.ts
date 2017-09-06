@@ -45,19 +45,8 @@ const jkfData = {
 
                 // hands[0]は先手の持ち駒、hands[1]は後手の持ち駒
                 hands: [
-                    {
-                        
-                        'KY': 1,
-                        'KE': 2,
-                        'FU': 3,
-                        'KA': 2,
-                        'GI': 5,
-                        
-                    },
-                    {
-                        'HI': 1,
-                        'FU': 2
-                    }
+                    {},
+                    {}
                 ]
             },
     },
@@ -69,7 +58,17 @@ const jkfData = {
             [
                 {move: {from: {x: 8, y: 8}, to: {x: 2, y: 2}, color: 0, piece: 'KA', capture: 'KA', promote: false}},
                 {move: {from: {x: 3, y: 1}, to: {x: 2, y: 2}, color: 1, piece: 'GI', capture: 'KA', same: true}},
-                {move: {to: {x: 4, y: 5}, color: 0, piece: 'KA'}}
+                {move: {to: {x: 4, y: 5}, color: 0, piece: 'KA'},'forks': [
+                    [
+                        {move: {from: {x: 2, y: 7}, to: {x: 2, y: 6}, color: 0, piece: 'FU'}},
+                        {move: {from: {x: 9, y: 3}, to: {x: 9, y: 4}, color: 1, piece: 'FU'}, 'forks':[
+                            [
+                                {move: {from: {x: 1, y: 3}, to: {x: 1, y: 4}, color: 1, piece: 'FU'}}
+                            ]
+                        ]}
+                    ]
+                ]},
+                {move: {from: {x: 9, y: 3}, to: {x: 9, y: 4}, color: 1, piece: 'FU'}}
             ]
         ]},
         {move: {from: {x: 2, y: 2}, to: {x: 7, y: 7}, color: 1, piece: 'KA', capture: 'KE', promote: true, same: true}},

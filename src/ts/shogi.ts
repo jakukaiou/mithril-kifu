@@ -80,6 +80,7 @@ export class Info {
             name       : '歩',      // 略駒名
             fullName   : '歩兵',     // 駒名
             className  : 'fu',      // cssクラス中で使用する名前
+            banName    : 'FU',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -99,6 +100,7 @@ export class Info {
             name       : '香',      // 略駒名
             fullName   : '香車',     // 駒名
             className  : 'kyo',     // cssクラス中で使用する名前
+            banName    : 'KY',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'dir',
@@ -118,6 +120,7 @@ export class Info {
             name       : '桂',      // 略駒名
             fullName   : '桂馬',     // 駒名
             className  : 'kei',     // cssクラス中で使用する名前
+            banName    : 'KE',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -142,6 +145,7 @@ export class Info {
             name       : '銀',      // 略駒名
             fullName   : '銀将',     // 駒名
             className  : 'gin',     // cssクラス中で使用する名前
+            banName    : 'GI',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -181,6 +185,7 @@ export class Info {
             name       : '金',      // 略駒名
             fullName   : '金将',     // 駒名
             className  : 'kin',     // cssクラス中で使用する名前
+            banName    : 'KI',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -224,6 +229,7 @@ export class Info {
             name       : '角',      // 略駒名
             fullName   : '角行',     // 駒名
             className  : 'kaku',    // cssクラス中で使用する名前
+            banName    : 'KA',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'dir',
@@ -258,6 +264,7 @@ export class Info {
             name       : '飛',      // 略駒名
             fullName   : '飛車',     // 駒名
             className  : 'hisha',   // cssクラス中で使用する名前
+            banName    : 'HI',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'dir',
@@ -292,6 +299,7 @@ export class Info {
             name       : '王',      // 略駒名
             fullName   : '王将',     // 駒名
             className  : 'ou',      // cssクラス中で使用する名前
+            banName    : 'OU',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -345,6 +353,7 @@ export class Info {
             name       : 'と',      // 略駒名
             fullName   : 'と金',     // 駒名
             className  : 'to',      // cssクラス中で使用する名前
+            banName    : 'TO',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -389,6 +398,7 @@ export class Info {
             name       : '成香',     // 略駒名
             fullName   : '成香',     // 駒名
             className  : 'nkyo',    // cssクラス中で使用する名前
+            banName    : 'NY',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -430,9 +440,10 @@ export class Info {
         },
         {
             // 成桂
-            name       : '成桂',      // 略駒名
+            name       : '成桂',     // 略駒名
             fullName   : '成桂',     // 駒名
             className  : 'nkei',    // cssクラス中で使用する名前
+            banName    : 'NK',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -474,9 +485,10 @@ export class Info {
         },
         {
             // 成銀
-            name       : '成銀',      // 略駒名
+            name       : '成銀',     // 略駒名
             fullName   : '成銀',     // 駒名
-            className  : 'ngin',      // cssクラス中で使用する名前
+            className  : 'ngin',    // cssクラス中で使用する名前
+            banName    : 'NG',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -521,6 +533,7 @@ export class Info {
             name       : '馬',      // 略駒名
             fullName   : '竜馬',     // 駒名
             className  : 'uma',     // cssクラス中で使用する名前
+            banName    : 'UM',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'dir',
@@ -575,6 +588,7 @@ export class Info {
             name       : '龍',      // 略駒名
             fullName   : '龍王',     // 駒名
             className  : 'ryu',     // cssクラス中で使用する名前
+            banName    : 'RY',      // 盤面情報での駒名
             moves      : [          // 進行方向定義 (posなら進行位置、dirなら進行方向)
                 {
                     type : 'pos',
@@ -660,6 +674,38 @@ export class Info {
     public static getClassName(komaNum: number, owner: number): string {
         const ownerName = (owner === PLAYER.SENTE) ? 'prop' : 'oppo';
         return 'c-koma' + '_' + ownerName + '_' + this.komaData[komaNum]['className'];
+    }
+
+    /**
+     * 駒の成元を返す
+     * 
+     * @param komaNum: 駒の番号
+     * @param owner: 駒の持ち主
+     * 
+     * @return Array
+     */
+    public static getOrigin(komaString: string): string {
+        if(this.komaData[this.komaAtoi(komaString)]['devolveNum']) {
+            return this.komaData[this.komaData[this.komaAtoi(komaString)]['devolveNum']]['banName'];
+        }else {
+            return null;
+        }
+    }
+
+    /**
+     * 駒の成先を返す
+     * 
+     * @param komaNum: 駒の番号
+     * @param owner: 駒の持ち主
+     * 
+     * @return Array
+     */
+    public static getPromote(komaString: string): string {
+        if(this.komaData[this.komaAtoi(komaString)]['promoNum']) {
+            return this.komaData[this.komaData[this.komaAtoi(komaString)]['promoNum']]['banName'];
+        }else {
+            return null;
+        }
     }
 
     /**

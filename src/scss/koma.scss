@@ -127,6 +127,13 @@
     position: relative;
 }
 
+.c-koma_piece_base.is-focus {
+    right: -1px;
+    top: 2px;
+
+    @include picture('/images/focus/focus_trpt_r.png');
+}
+
 .c-koma_piece_num {
     position: absolute;
     color: #ff4898;
@@ -135,5 +142,5 @@
     right: 2px;
     top: -2px;
     text-shadow: 1px 1px 1px #000, -1px 1px 1px #000, 1px -1px 1px #000, -1px -1px 1px #000;
-    z-index: 120;
+    z-index: 125;
 }
