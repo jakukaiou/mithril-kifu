@@ -19,6 +19,10 @@
     @include border(#000);
 }
 
+.c-kifuPlayer:focus {
+    outline: none;
+}
+
 //棋譜表示コンポーネントのインナークラス
 .c-kifuPlayer_inner {
     height: 530px;

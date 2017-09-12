@@ -23,7 +23,7 @@
 
 .c-kifu_row {
     font-size: 15px;
-    border-bottom: groove rgba(0, 0, 0, 0.3) 1px;
+    border-bottom: groove rgba(0, 0, 0, 0.2) 1px;
     display: flex;
     height: 24px;
     align-items: center;
@@ -32,7 +32,7 @@
 
 .c-kifu_row.is-active {
     color: #fff;
-    background-color: #82b2ff;
+    background-color: #92c2ff;
 }
 
 .c-kifu_move_info {
@@ -62,6 +62,10 @@
     cursor: pointer;
 }
 
+.c-kifu_notation_close {
+    cursor: pointer;
+}
+
 .c-kifu_fork {
     height: 512px;
     width: 150px;
@@ -75,7 +79,16 @@
 }
 
 .c-kifu_fork .c-kifu_row {
-    background-color: #ff82b2;
+    background-color: #ff92c2;
+}
+
+.c-kifu_fork .c-kifu_addRow {
+    color: #ff92c2;
+    background-color: #5056b6;
+}
+
+.c-kifu_addRow {
+    cursor: pointer;
 }
 
 .c-kifu_forkRow {

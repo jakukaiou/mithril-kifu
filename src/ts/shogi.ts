@@ -8,11 +8,18 @@ export const PLAYER = {
     GOTE : 1
 };
 
+// プレイヤーのモード
 export const MODE = {
     VIEW: 0,
     EDIT: 1,
     PLAY: 2
 };
+
+// 棋譜のタイプ
+export const LIST = {
+    KIFU   : 0,
+    ZYOSEKI: 0
+}
 
 // 駒の種類
 export const KOMA = {

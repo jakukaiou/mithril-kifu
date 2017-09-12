@@ -17,6 +17,20 @@ class KifuDataError implements Error {
     }
 }
 
+class KifuPos {
+    public x: number;
+    public y: number;
+
+    constructor(X: number, Y: number) {
+        this.x = X;
+        this.y = Y;
+    }
+
+    public reverse(): KifuPos {
+        return new KifuPos(10 - this.x,10 - this.y);
+    }
+}
+
 /**
  * 指し手のデータを扱うクラス
  */
@@ -69,11 +83,11 @@ class MoveInfo {
 
         this.fork = fork;
 
-        this.comments = _.has(move,'comments') ? move['comments'] : null;
+        this.comments = _.has(move, 'comments') ? move['comments'] : null;
 
         if(this.comments) {
             this.comment = '';
-            _.map(this.comments,(comment) => {
+            _.map(this.comments, (comment) => {
                 this.comment += comment;
             });
         }else {
@@ -155,27 +169,52 @@ class MoveInfo {
                 let komaString = SHOGI.Info.getKanji(SHOGI.Info.komaAtoi(moveInfo['piece']));
 
                 // 成る場合「成」を駒名に追加
-                if(_.has(moveInfo, 'promote')){
+                if(_.has(moveInfo, 'promote')) {
                     komaString = (moveInfo['promote']) ? komaString + '成' : komaString;
                 }
 
                 // 先手or後手の文字列
                 const turnString = (moveInfo['color'] === 0) ? '☗' : '☖';
 
-                if(!_.has(moveInfo, 'same')){
+                // 指し手位置の文字列
+                let moveString = '同';
+                if(!_.has(moveInfo, 'same')) {
                     // 前の手と異なる位置への指し手
 
                     // 数字の漢字
-                    const kanjiNum:Array<string> = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+                    const kanjiNum: Array<string> = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
                     // 駒の移動先座標の文字列
-                    const moveString = moveInfo['to']['x'] + kanjiNum[moveInfo['to']['y']];
-
-                    return turnString + moveString + komaString;
-                }else {
-                    // 前の手と同じ位置への指し手
-                    return turnString + '同' + komaString;
+                    moveString = moveInfo['to']['x'] + kanjiNum[moveInfo['to']['y']];   
                 }
+
+                // 相対情報を駒名に付加
+                if(!_.has(moveInfo, 'relative')) {
+                    const relativeString = moveInfo['relative'];
+
+                    switch(relativeString){
+                        case 'L':
+                            komaString = komaString + '左';
+                            break;
+                        case 'C':
+                            komaString = komaString + '直';
+                            break;
+                        case 'R':
+                            komaString = komaString + '右';
+                            break;
+                        case 'U':
+                            komaString = komaString + '上';
+                            break;
+                        case 'M':
+                            komaString = komaString + '寄';
+                            break;
+                        case 'D':
+                            komaString = komaString + '引';
+                            break;
+                    }
+                }
+
+                return turnString + moveString + komaString;
             }else {
                 throw new KifuDataError('move to property not defined');
             }
@@ -189,6 +228,8 @@ class MoveInfo {
  * 現在の盤面データを表すクラス
  */
 export default class KifuData {
+    // 定跡 or 棋譜
+    public listmode;
 
     // 盤面の表示配列 (盤面へはメソッドを介してアクセスする)
     private _board;
@@ -200,7 +241,7 @@ export default class KifuData {
     private _moveArray: Array< MoveInfo | {[key: number]: MoveInfo;}>;
 
     // 現在の各分岐点における分岐インデックスの配列
-    private forkPoint: {[key: number]: number;};
+    private forkPoints: {[key: number]: number;};
 
     // 初期の盤面配列
     private initBoard;
@@ -217,6 +258,9 @@ export default class KifuData {
     // 指し手の配列
     private moves;
 
+    // 初期の指し手配列
+    private initMoves;
+
     // 編集モードかどうか
     private mode;
 
@@ -229,14 +273,23 @@ export default class KifuData {
 
         // 指し手情報のコピー
         if(_.has(jkfData, 'moves')) {
-            this.moves = _.cloneDeep(jkfData['moves']);
+            this.initMoves = jkfData['moves'];
         }else {
-            this.moves = [];
+            this.initMoves = [];
         }
 
-        this.forkPoint = {};
+        this.moves = _.cloneDeep(this.initMoves);
+
+        this.forkPoints = {};
         // 全てのforkを0として初期の分岐を作成
         this.makeInitialMove();
+
+        // TODO: ここの判断はjkfのヘッダ情報を利用する？
+        if(this.forkPoints === {}){
+            this.listmode === SHOGI.LIST.KIFU;
+        }else{
+            this.listmode === SHOGI.LIST.ZYOSEKI;
+        }
         
         // 平手状態
         this.initBoard = 
@@ -458,38 +511,38 @@ export default class KifuData {
      * @return MoveInfo
      */
      public getMove(moveNum: number): MoveInfo {
-        if(_.has(this.forkPoint, moveNum)) {
-            return <MoveInfo>this._moveArray[moveNum][this.forkPoint[moveNum]];
+        if(_.has(this.forkPoints, moveNum)) {
+            return <MoveInfo>this._moveArray[moveNum][this.forkPoints[moveNum]];
         }else {
             return <MoveInfo>this._moveArray[moveNum];
         }
      }
 
      /**
-     * 分岐部分の指し手一覧を返す
-     * 
-     * @param forkNum: 分岐する指し手番号
-     * 
-     * @return MoveInfo
-     */
+      * 分岐部分の指し手一覧を返す
+      * 
+      * @param forkNum: 分岐する指し手番号
+      * 
+      * @return MoveInfo
+      */
      public getForkList(forkNum: number): {[key: number]: MoveInfo;} {
-        if(_.has(this.forkPoint, forkNum)) {
+        if(_.has(this.forkPoints, forkNum)) {
             return this._moveArray[forkNum] as {[key: number]: MoveInfo;};
         }else {
-            throw new KifuDataError('_moveArray[forkNum] is not Array');
+            return {};
         }
      }
 
      /**
-     * 分岐している指し手の情報を返す
-     * 
-     * @param moveNum: 指し手番号
-     * @param forkNum: 分岐番号
-     * 
-     * @return MoveInfo
-     */
+      * 分岐している指し手の情報を返す
+      * 
+      * @param moveNum: 指し手番号
+      * @param forkNum: 分岐番号
+      * 
+      * @return MoveInfo
+      */
      public getForkMove(moveNum: number, forkNum: number): MoveInfo {
-        if(_.has(this.forkPoint, moveNum)) {
+        if(_.has(this.forkPoints, moveNum)) {
             return <MoveInfo>this._moveArray[moveNum][forkNum];
         }else {
             throw new KifuDataError('_moveArray[forkNum] is not Array');
@@ -509,14 +562,23 @@ export default class KifuData {
      }
 
     /**
+     * 現在の指し手番号を返す
+     * 
+     * @return number
+     */
+    public get moveNum(): number {
+        return this._moveNum;
+    }
+
+    /**
      * 与えられた指し手番号の盤面に更新
      * 
      * @param moveNum: 指し手番号
      * 
      */
     public set moveNum(updateNum: number) {
-        // 更新後の指し手が現在のものと異なる場合のみ更新処理を行う
-        if(this._moveNum !== updateNum) {
+        // 更新後の指し手が指し手配列の範囲内で、現在のものと異なる場合のみ更新処理を行う
+        if(this._moveNum !== updateNum && updateNum >= 0 && updateNum < this.moveArray.length) {
             // _boardと_hands、_moveNumが更新の対象
             if(this._moveNum > updateNum) {
                 // 更新後の指し手が現在の指し手より小さい場合(手を戻す)
@@ -634,6 +696,44 @@ export default class KifuData {
     }
 
     /**
+     * 現在の反転盤面を返す
+     * 
+     * @return Array<Array<Object>>
+     */
+    public get reverseBoard(): Array<Array<Object>> {
+        
+        const board = _.cloneDeep(this._board);
+
+        return _.map( _.reverse(board),(boardRow)=>{
+            return _.reverse(boardRow as Array<Object>) as Array<Object>;
+        });
+    }
+
+    /**
+     * 棋譜上の位置指定から盤面配列の位置指定に変換
+     * 
+     * @param x: ビュー配列上の横位置
+     * @param y: ビュー配列上の縦位置
+     * 
+     * @return KifuPos
+     */
+    private kifuposToPos(kx: number, ky: number): KifuPos {
+        return new KifuPos(9 - kx, ky - 1);
+    }
+
+    /**
+     * 盤面配列の位置指定から棋譜上の位置指定に変換
+     * 
+     * @param x: ビュー配列上の横位置
+     * @param y: ビュー配列上の縦位置
+     * 
+     * @return KifuPos
+     */
+    private posToKifupos(x: number, y: number): KifuPos {
+        return new KifuPos(9 - x, y + 1);
+    }
+
+    /**
      * 現在の盤面の駒を返す
      * 
      * @param x: 盤面の横位置
@@ -641,8 +741,10 @@ export default class KifuData {
      * 
      * @return Object
      */
-    public getBoardPiece(x: number, y: number): Object {
-        return this._board[y - 1][9 - x];
+    public getBoardPiece(kx: number, ky: number): Object {
+        const pos = this.kifuposToPos(kx, ky);
+
+        return this._board[pos.y][pos.x];
     }
 
     /**
@@ -654,17 +756,42 @@ export default class KifuData {
      * @param info: 更新後の駒情報
      * 
      */
-    private setBoardPiece(x: number, y: number, info: Object) {
-        this._board[y - 1][9 - x] = _.cloneDeep(info);
+    private setBoardPiece(kx: number, ky: number, info: Object) {
+        const pos = this.kifuposToPos(kx, ky);
+
+        this._board[pos.y][pos.x] = _.cloneDeep(info);
     }
 
     /**
-     * 現在のフォーカス位置を返す
+     * 指定座標がフォーカスしているかを返す
      * 
-     * @return Array<Array<Object>>
+     * @param x: x座標
+     * @param y: y座標
+     * @param reverse: 反転状態で判定するかどうか
+     * 
+     * @return boolean
      */
-    public get focus(): Object {
-        return this._focus;
+    public isFocus(x: number, y: number,reverse: boolean = false): boolean {
+        if(this._focus) {
+            if(!_.has(this._focus,'x') || !_.has(this._focus,'y')) {
+                throw new KifuDataError('focusオブジェクトのプロパティが不足しています。');
+            }
+
+            const pos = this.posToKifupos(x, y);
+            const rPos = pos.reverse();
+
+            const focusPos = new KifuPos(this._focus['x'], this._focus['y']);
+
+            if(!(reverse) && focusPos.x === pos.x && focusPos.y === pos.y) {
+                return true;
+            }else if(reverse && focusPos.x === rPos.x && focusPos.y === rPos.y) {
+                return true;
+            }else {
+                return false;
+            }
+        }else {
+            return false;
+        }
     }
 
     /**
@@ -717,15 +844,6 @@ export default class KifuData {
     }
 
     /**
-     * 現在の指し手番号を返す
-     * 
-     * @return number
-     */
-    public get moveNum(): number {
-        return this._moveNum;
-    }
-
-    /**
      * 現在の指し手配列を返す
      * 
      * @return number
@@ -734,35 +852,38 @@ export default class KifuData {
          return this._moveArray;
      }
 
-    /**
-     * moveArray, forkPointの初期値を設定
-     * 
-     * 
-     */
-    public makeInitialMove() {
-        // TODO: forks内が配列でない場合例外を投げる？
-        const moveLength = this.moves.length;
-
-        this._moveArray = [];
-
+     /**
+      * 現在の指し手配列に新たな指し手を追加
+      * 
+      * @param moves: 追加する指し手
+      * @param fork: 追加する指し手が分岐配列かどうか
+      * 
+      * @return number
+      */
+     private moveArrayAdd(moves) {
         let forkArray: {[key: number]: MoveInfo;} = null;
         let forkNum = 1;
 
+        const moveLength = moves.length;
+
+        // forkPointsを更新する際に使う
+        const addPoint = _.size(this._moveArray);
+
         for(let i = 0; i < moveLength ; i++) {
-            const isFork = _.has(this.moves[i], 'forks');
+            const isFork = _.has(moves[i], 'forks');
 
             if(!isFork) {
-                this._moveArray.push(new MoveInfo(this.moves[i], false));
+                this._moveArray.push(new MoveInfo(moves[i], false));
             }else {
                 forkArray = {};
 
-                forkArray[0] = new MoveInfo(this.moves[i], true);
+                forkArray[0] = new MoveInfo(moves[i], true);
 
-                //初期の分岐はひとつめのものを使う
-                this.forkPoint[i] = 0;
+                // 初期の分岐はひとつめのものを使う
+                this.forkPoints[addPoint + i] = 0;
 
                 forkNum = 1;
-                _.each(this.moves[i]['forks'],(forkMove) => {
+                _.each(moves[i]['forks'],(forkMove) => {
                     forkArray[forkNum] = new MoveInfo(forkMove[0], true);
                     forkNum++;
                 });
@@ -770,6 +891,152 @@ export default class KifuData {
                 this._moveArray.push(_.cloneDeep(forkArray));
             }
         }
+     }
+
+     /**
+      * 現在の指し手配列の分岐後の指し手を削除する
+      * 
+      * @param forkPoint: 分岐地点の番号
+      * 
+      * @return number
+      */
+     private moveArrayDelete(forkNum: number) {
+        this._moveArray = _.slice(this._moveArray, 0, (forkNum + 1));
+     }
+
+     // TODO: moveオブジェクトを作成する
+     private makeMoveData(toX: number, toY: number, fromX: number, fromY: number, same: boolean, promote: boolean) {
+
+     }
+
+     
+
+     // TODO: 該当の指し手データを追加する
+     private moveAdd(moveNum: number, moveData: Object) {
+
+     }
+     
+     // TODO: 該当の指し手データを削除する
+     private moveDelete(moveNum: number, forkNum: number = 0) {
+
+     }
+
+     // TODO: 各オブジェクトを_.hasでチェックするバリデーションチェック用関数を作る？
+
+     /**
+      * 指し手分岐をスイッチする
+      * 
+      * @param x: boardのx座標
+      * @param y: boardのy座標
+      * 
+      * @return Array<Array<number>>;
+      *
+      */
+     public makeMoveArea(x: number, y: number):Array<Array<number>> {
+        
+        let area:Array<Array<number>> = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+
+        const targetKoma = this._board[y][x];
+
+        if(targetKoma === {}){
+            return area;
+        }
+
+        const color = targetKoma['color'];
+
+        //移動対象の駒座標
+        const pos = new KifuPos(x, y);
+
+        const komaMoves = SHOGI.Info.getMoves(SHOGI.Info.komaAtoi(targetKoma['kind']));
+
+
+        // x,yが範囲内かどうか調べる
+        const inRange = (x: number, y: number) => {
+            if(x >= 0 && x < 9 && y >= 0 && y < 9){
+                return true;
+            }else {
+                return false;
+            }
+        }
+
+        _.each(komaMoves, (move) => {
+            // 駒の動きをひとつずつ検討し、areaを確定する
+            let x = move['x'];
+            let y = move['y'];
+
+            
+            if(!color){
+                // 先手の場合
+                y *= (-1);
+            }else {
+                // 後手の場合
+                x *= (-1);
+            }
+
+            switch(move['type']){
+                case 'pos':
+                    if(inRange(pos.y + y, pos.x + x)){
+                        if(this._board[pos.y + y][pos.x + x] === {}){
+                            area[pos.y + y][pos.x + x] = 1;
+                        }else {
+                            if(this._board[pos.y + y][pos.x + x]['color'] != color){
+                                area[pos.y + y][pos.x + x] = 1;
+                            }
+                        }
+                    }
+                    break;
+                case 'dir':
+                    let movable = true;
+                    let nextX = pos.x;
+                    let nextY = pos.y;
+
+                    while(movable) {
+                        nextX += x;
+                        nextY += y;
+                        if(inRange(nextY, nextX)) {
+                            if(this._board[nextY][nextX] === {}){
+                                area[nextY][nextX] = 1;
+                            }else {
+                                if(this._board[nextY][nextX]['color'] != color){
+                                    area[nextY][nextX] = 1;
+                                }else {
+                                    movable = false;
+                                }
+                            }
+                        }else {
+                            movable = false;
+                        }
+                    }
+                    break;
+                default:
+                    throw new KifuDataError('未知の移動タイプです。');
+            }
+        })
+
+        return area;
+     }
+
+    /**
+     * moveArray, forkPointの初期値を設定
+     * 
+     * 
+     */
+    public makeInitialMove() {
+        const moveLength = this.moves.length;
+
+        this._moveArray = [];
+
+        this.moveArrayAdd(this.moves);
     }
 
     /**
@@ -783,87 +1050,48 @@ export default class KifuData {
         // _board,_hands,_moveArrayが更新対象
 
         // 更新の必要がない場合何もしない
+        if(this.moveNum === moveNum && forkNum === this.forkPoints[moveNum]) {
+            return;
+        }
+
+        // moveNumが0ならエラーを出す
+        if(moveNum <= 0) {
+            throw new KifuDataError('初期盤面では棋譜分岐できません。');
+        }
+
+        // 現在の指し手が分岐後のものの場合指し手を戻す
+        let moveLeap: boolean = false;
+        if(this.moveNum >= moveNum) {
+            this.moveNum = (moveNum - 1);
+            moveLeap = true;
+        }
 
         // 更新部分の配列を削除
-        this._moveArray = _.slice(this._moveArray, 0, (moveNum + 1));
+        this.moveArrayDelete(moveNum);
 
         // forkPointを修正
-        this.forkPoint = _.pickBy(this.forkPoint, (value, key)=>{
+        this.forkPoints = _.pickBy(this.forkPoints, (value, key) => {
             // trueを返したものをpickする
-            return (+key < moveNum) ? true : false
+            return (+key < moveNum) ? true : false;
         }) as { [key: number]: number; };
-        this.forkPoint[moveNum] = forkNum;
-        
-
-        this.forkPoint[moveNum] = forkNum;
+        this.forkPoints[moveNum] = forkNum;
 
         if(forkNum !== 0) {
             // ループ対象となる指し手オブジェクトを代入
             const targetMoveArray = this.getForkMoveObj(moveNum);
 
             // 指し手オブジェクトの更新
-            const moveLength = _.size(targetMoveArray);
-            let forkArray: {[key: number]: MoveInfo;} = null;
-            if(moveLength){
-                for(let i = 0; i < moveLength ; i++) {
-                    const isFork = _.has(targetMoveArray[i], 'forks');
-                    if(!isFork) {
-                        this._moveArray.push(new MoveInfo(targetMoveArray[i], false));
-                    }else {
-                        
-                        forkArray = {};
-
-                        forkArray[0] = new MoveInfo(targetMoveArray[i], true);
-
-                        // 初期の分岐はひとつめのものを使う
-                        this.forkPoint[moveNum + i + 1] = 0;
-
-                        forkNum = 1;
-                        _.each(targetMoveArray[i]['forks'],(forkMove) => {
-                            forkArray[forkNum] = new MoveInfo(forkMove[0], true);
-                            forkNum++;
-                        });
-
-                        this._moveArray.push(_.cloneDeep(forkArray));
-                    }
-                }
-            }
-        }else{
+            this.moveArrayAdd(targetMoveArray);
+        }else {
             // 通常分岐に戻る場合はmakeInitalMoveと同様の処理
             const targetMoveArray = this.getForkMoveObj(moveNum, true);
 
             // 指し手オブジェクトの更新
-            const moveLength = _.size(targetMoveArray);
-            let forkArray: {[key: number]: MoveInfo;} = null;
-
-            for(let i = 0; i < moveLength ; i++) {
-                const isFork = _.has(targetMoveArray[i], 'forks');
-
-                if(!isFork) {
-                    this._moveArray.push(new MoveInfo(targetMoveArray[i], false));
-                }else {
-                    
-                    forkArray = {};
-
-                    forkArray[0] = new MoveInfo(targetMoveArray[i], true);
-
-                    // 初期の分岐はひとつめのものを使う
-                    this.forkPoint[moveNum + i] = 0;
-
-                    forkNum = 1;
-                    _.each(targetMoveArray[i]['forks'],(forkMove) => {
-                        forkArray[forkNum] = new MoveInfo(forkMove[0], true);
-                        forkNum++;
-                    });
-
-                    this._moveArray.push(_.cloneDeep(forkArray));
-                }
-            }
+            this.moveArrayAdd(targetMoveArray);
         }
 
-        // TODO: switchしたのが現在の盤面、またはそれ以前の盤面の場合、分岐盤面への更新処理を行う
-        if(this.moveNum === moveNum){
-            this.moveNum--;
+        // 手を戻っている場合分岐地点に指し手を進める
+        if(moveLeap) {
             this.moveNum++;
         }
     }
@@ -884,17 +1112,17 @@ export default class KifuData {
 
         let tmpMoveObj = this.moves;
 
-        _.each(this.forkPoint, (forkNum, forkPos) => {
+        _.each(this.forkPoints, (forkNum, forkPos) => {
             if((+forkPos) > moveNum) {
                 skipFlag = true;
-            }else{
+            }else {
                 moveCount = (+forkPos);
             }
 
-            if(!skipFlag){
+            if(!skipFlag) {
                 const pos = +forkPos;
-                if(moveNum === moveCount && major){
-                    tmpMoveObj = _.slice(tmpMoveObj, (pos - basePos + 1))
+                if(moveNum === moveCount && major) {
+                    tmpMoveObj = _.slice(tmpMoveObj, (pos - basePos + 1));
                 }else {
                     tmpMoveObj = tmpMoveObj[pos - basePos]['forks'][(+forkNum - 1)];
                 }
@@ -903,7 +1131,7 @@ export default class KifuData {
         });
 
         if(moveNum !== moveCount) {
-            if(moveNum > moveCount){
+            if(moveNum > moveCount) {
                 throw new KifuDataError('moveNumの位置の指し手が分岐を持っていない');
             }else {
                 throw new KifuDataError('getMoveObjのバグ');
@@ -912,7 +1140,7 @@ export default class KifuData {
 
         if(major) {
             return tmpMoveObj;
-        }else{
+        }else {
             return _.slice(tmpMoveObj, 1);
         }
     }

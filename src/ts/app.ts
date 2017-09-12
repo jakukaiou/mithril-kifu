@@ -5,10 +5,10 @@ import KifuApp from './kifuApp';
 import * as SHOGI from './shogi';
 
 class KifuControlApp {
-    constructor(jkfData: Object ) {
+    constructor(jkfData: Object ,mode: number) {
 
         window.onload = () => {
-            m.route(document.body, '/', {'/': new KifuApp(jkfData, SHOGI.MODE.VIEW)});
+            m.route(document.body, '/', {'/': new KifuApp(jkfData, mode)});
         };
     }
 }
@@ -77,4 +77,5 @@ const jkfData = {
     ]
 };
 
-new KifuControlApp(jkfData);
+//new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
+new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
