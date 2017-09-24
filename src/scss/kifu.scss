@@ -52,6 +52,10 @@
     flex: 1;
 }
 
+.c-kifu_move_input {
+    font-size: 10px;
+}
+
 .c-kifu_notation {
     margin-left: auto;
     padding: 8px;
@@ -80,6 +84,10 @@
 
 .c-kifu_fork .c-kifu_row {
     background-color: #ff92c2;
+}
+
+.c-kifu_fork .c-kifu_row.is-stream {
+    background-color: #ff7292;
 }
 
 .c-kifu_fork .c-kifu_addRow {

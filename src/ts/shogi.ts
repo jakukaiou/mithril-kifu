@@ -68,10 +68,14 @@ export class Util {
 
             if(count === chunkNum) {
                 array.push(tmpObj);
+                tmpObj = null;
                 count = 0;
             }
         });
-        array.push(tmpObj);
+
+        if(!_.isNull(tmpObj)) {
+            array.push(tmpObj);
+        }
 
         return array;
     }
@@ -303,7 +307,7 @@ export class Info {
         },
         {
             // 王
-            name       : '王',      // 略駒名
+            name       : '玉',      // 略駒名
             fullName   : '王将',     // 駒名
             className  : 'ou',      // cssクラス中で使用する名前
             banName    : 'OU',      // 盤面情報での駒名
@@ -637,6 +641,26 @@ export class Info {
                     x    : -1,
                     y    : -1
                 },
+                {
+                    type : 'dir',
+                    x    : 1,
+                    y    : 0
+                },
+                {
+                    type : 'dir',
+                    x    : 0,
+                    y    : 1
+                },
+                {
+                    type : 'dir',
+                    x    : -1,
+                    y    : 0
+                },
+                {
+                    type : 'dir',
+                    x    : 0,
+                    y    : -1
+                },
             ],
             canPromote : false,     // 成れるかどうか
             isPromote  : true,      // 成り駒かどうか
@@ -651,42 +675,42 @@ export class Info {
     /**
      * 駒の略称を返す
      * 
-     * @param komaNum: 駒の番号
+     * @param komaType: 駒の番号
      * 
      * @return String
      */
-    public static getKanji(komaNum: number): string {
-        return this.komaData[komaNum]['name'];
+    public static getKanji(komaType: number): string {
+        return this.komaData[komaType]['name'];
     }
 
     /**
      * 駒の動きの配列を返す
      * 
-     * @param komaNum: 駒の番号
+     * @param komaType: 駒の番号
      * 
      * @return Array
      */
-    public static getMoves(komaNum: number): Array<Object> {
-        return this.komaData[komaNum]['moves'];
+    public static getMoves(komaType: number): Array<Object> {
+        return this.komaData[komaType]['moves'];
     }
 
     /**
      * 駒のクラス名を返す
      * 
-     * @param komaNum: 駒の番号
+     * @param komaType: 駒の番号
      * @param owner: 駒の持ち主
      * 
      * @return Array
      */
-    public static getClassName(komaNum: number, owner: number): string {
-        const ownerName = (owner === PLAYER.SENTE) ? 'prop' : 'oppo';
-        return 'c-koma' + '_' + ownerName + '_' + this.komaData[komaNum]['className'];
+    public static getClassName(komaType: number, owner: number, reverse: boolean): string {
+        const ownerName = (reverse)? (owner === PLAYER.SENTE) ? 'oppo' : 'prop' : (owner === PLAYER.SENTE) ? 'prop' : 'oppo';
+        return 'c-koma' + '_' + ownerName + '_' + this.komaData[komaType]['className'];
     }
 
     /**
      * 駒の成元を返す
      * 
-     * @param komaNum: 駒の番号
+     * @param komaType: 駒の番号
      * @param owner: 駒の持ち主
      * 
      * @return Array
@@ -702,10 +726,9 @@ export class Info {
     /**
      * 駒の成先を返す
      * 
-     * @param komaNum: 駒の番号
-     * @param owner: 駒の持ち主
+     * @param komaString: 盤面の駒名
      * 
-     * @return Array
+     * @return string
      */
     public static getPromote(komaString: string): string {
         if(this.komaData[this.komaAtoi(komaString)]['promoNum']) {
@@ -716,6 +739,17 @@ export class Info {
     }
 
     /**
+     * 駒番号から駒名の文字配列を返す
+     * 
+     * @param komaType: 駒の文字列
+     * 
+     * @return string
+     */
+    public static komaItoa(komaType: number): string {
+        return this.komaData[komaType]['banName'];
+    }
+
+    /**
      * 駒名の文字配列から駒番号を返す
      * 
      * @param komaString: 駒の文字列
@@ -723,59 +757,59 @@ export class Info {
      * @return Array
      */
     public static komaAtoi(komaString: string): number {
-        let komaNum: number = 0;
+        let komaType: number = 0;
 
         switch(komaString) {
             case '*':
-                komaNum = KOMA.NONE;
+                komaType = KOMA.NONE;
                 break;
             case 'FU':
-                komaNum = KOMA.FU;
+                komaType = KOMA.FU;
                 break;
             case 'KY':
-                komaNum = KOMA.KY;
+                komaType = KOMA.KY;
                 break;
             case 'KE':
-                komaNum = KOMA.KE;
+                komaType = KOMA.KE;
                 break;
             case 'GI':
-                komaNum = KOMA.GI;
+                komaType = KOMA.GI;
                 break;
             case 'KI':
-                komaNum = KOMA.KI;
+                komaType = KOMA.KI;
                 break;
             case 'KA':
-                komaNum = KOMA.KA;
+                komaType = KOMA.KA;
                 break;
             case 'HI':
-                komaNum = KOMA.HI;
+                komaType = KOMA.HI;
                 break;
             case 'OU':
-                komaNum = KOMA.OU;
+                komaType = KOMA.OU;
                 break;
             case 'TO':
-                komaNum = KOMA.TO;
+                komaType = KOMA.TO;
                 break;
             case 'NY':
-                komaNum = KOMA.NY;
+                komaType = KOMA.NY;
                 break;
             case 'NK':
-                komaNum = KOMA.NK;
+                komaType = KOMA.NK;
                 break;
             case 'NG':
-                komaNum = KOMA.NG;
+                komaType = KOMA.NG;
                 break;
             case 'UM':
-                komaNum = KOMA.UM;
+                komaType = KOMA.UM;
                 break;
             case 'RY':
-                komaNum = KOMA.RY;
+                komaType = KOMA.RY;
                 break;
             default:
-                komaNum = KOMA.NONE;
+                komaType = KOMA.NONE;
                 break;
         }
 
-        return komaNum;
+        return komaType;
     }
 }

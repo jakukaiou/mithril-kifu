@@ -124,14 +124,25 @@
 }
 
 .c-koma_piece_base {
+    right: -1px;
+    top: 1px;
     position: relative;
 }
 
-.c-koma_piece_base.is-focus {
-    right: -1px;
-    top: 1px;
-
+.c-koma_piece_base.is-red {
     @include picture('/images/focus/focus_trpt_r.png');
+}
+
+.c-koma_piece_base.is-green {
+    @include picture('/images/focus/focus_trpt_g.png');
+}
+
+.c-koma_piece_base.is-blue {
+    @include picture('/images/focus/focus_trpt_b.png');
+}
+
+.c-koma_piece_base.is-yellow {
+    @include picture('/images/focus/focus_trpt_y.png');
 }
 
 .c-koma_piece_num {
@@ -143,4 +154,35 @@
     top: -2px;
     text-shadow: 1px 1px 1px #000, -1px 1px 1px #000, 1px -1px 1px #000, -1px -1px 1px #000;
     z-index: 125;
+}
+
+.c-koma_nari_container {
+    position: absolute;
+    right: -1px;
+    top: 1px;
+    width: 43px;
+    height: 48px;
+    border: groove 1px;
+    //background-color: rgba(1, 1, 1, 0.2);
+}
+
+.c-koma_nari_button {
+    font-size: 15px;
+    background-color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    vertical-align: middle;
+    height: 50%;
+    cursor: pointer;
+}
+
+.c-koma_nari_button.is-nari {
+    color: #fff;
+    background-color: rgba(255, 56, 96, 0.7);
+    font-weight: bold;
+}
+
+.c-koma_nari_button.is-funari {
+    color: #555;
+    background-color: rgba(255, 255, 255, 0.7);
+    font-weight: bold;
 }
