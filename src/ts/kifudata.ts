@@ -165,6 +165,22 @@ class MoveInfo {
     }
 
     /**
+     * コメントを元の指し手配列に対してセットする
+     * 
+     * @param comment 
+     */
+    public setComment(comment: string) {
+        if(_.has(this.move, 'comments')) {
+            this.move['comments'][0] = comment;
+        }else {
+            this.move['comments'] = [];
+            this.move['comments'][0] = comment;
+        }
+
+        this.comment = comment;
+    }
+
+    /**
      * 指し手オブジェクトから指し手の名称を返す
      * 
      * @param move: 指し手オブジェクト
@@ -178,11 +194,6 @@ class MoveInfo {
 
                 // 駒名の文字列
                 let komaString = SHOGI.Info.getKanji(SHOGI.Info.komaAtoi(moveInfo['piece']));
-
-                // 成る場合「成」を駒名に追加
-                if (_.has(moveInfo, 'promote')) {
-                    komaString = (moveInfo['promote']) ? komaString + '成' : komaString;
-                }
 
                 // 先手or後手の文字列
                 const turnString = (moveInfo['color'] === 0) ? '☗' : '☖';
@@ -200,29 +211,43 @@ class MoveInfo {
                 }
 
                 // 相対情報を駒名に付加
-                if (!_.has(moveInfo, 'relative')) {
-                    const relativeString = moveInfo['relative'];
+                if (_.has(moveInfo, 'relative')) {
+                    const relativeString: string = moveInfo['relative'] as string;
 
-                    switch (relativeString) {
-                        case 'L':
-                            komaString = komaString + '左';
-                            break;
-                        case 'C':
-                            komaString = komaString + '直';
-                            break;
-                        case 'R':
-                            komaString = komaString + '右';
-                            break;
-                        case 'U':
-                            komaString = komaString + '上';
-                            break;
-                        case 'M':
-                            komaString = komaString + '寄';
-                            break;
-                        case 'D':
-                            komaString = komaString + '引';
-                            break;
-                    }
+                    // 相対情報を1文字ずつに分割
+                    const relativeArray = _.split(relativeString, '');
+
+                    // 相対情報配列の情報をもとに駒名に移動位置情報を追加
+                    _.each(relativeArray,(relativeChar) => {
+                        switch (relativeChar) {
+                            case 'L':
+                                komaString = komaString + '左';
+                                break;
+                            case 'C':
+                                komaString = komaString + '直';
+                                break;
+                            case 'R':
+                                komaString = komaString + '右';
+                                break;
+                            case 'U':
+                                komaString = komaString + '上';
+                                break;
+                            case 'M':
+                                komaString = komaString + '寄';
+                                break;
+                            case 'D':
+                                komaString = komaString + '引';
+                                break;
+                            case 'H':
+                                komaString = komaString + '打';
+                                break;
+                        }
+                    });
+                }
+
+                // 成る場合「成」を駒名に追加
+                if (_.has(moveInfo, 'promote')) {
+                    komaString = (moveInfo['promote']) ? komaString + '成' : komaString;
                 }
 
                 return turnString + moveString + komaString;
@@ -233,22 +258,6 @@ class MoveInfo {
             return '初期局面';
         }
     }
-
-    /**
-     * コメントを元の指し手配列に対してセットする
-     * 
-     * @param comment 
-     */
-    public setComment(comment: string) {
-        if(_.has(this.move, 'comments')) {
-            this.move['comments'][0] = comment;
-        }else {
-            this.move['comments'] = [];
-            this.move['comments'][0] = comment;
-        }
-
-        this.comment = comment;
-    }
 }
 
 /**
@@ -256,7 +265,25 @@ class MoveInfo {
  */
 export default class KifuData {
     // 定跡 or 棋譜
-    public listmode;
+    public listmode: number;
+
+    // 現在の手番 先手or後手
+    public color: number;
+
+    // 現在の指し手番号
+    private _moveNum;
+
+    // 指し手の配列
+    private moves;
+
+    // 初期の指し手配列
+    private initMoves;
+
+    // 編集モードかどうか
+    private mode;
+
+    // 現在のフォーカスポイント
+    private _focus;
 
     // 盤面の表示配列 (盤面へはメソッドを介してアクセスする)
     private _board: Array<Array<Object>>;
@@ -276,24 +303,6 @@ export default class KifuData {
     // 初期の持ち駒
     private initHands;
 
-    // 現在の手番 先手or後手
-    public color;
-
-    // 現在の指し手番号
-    private _moveNum;
-
-    // 指し手の配列
-    private moves;
-
-    // 初期の指し手配列
-    private initMoves;
-
-    // 編集モードかどうか
-    private mode;
-
-    // 現在のフォーカスポイント
-    private _focus;
-
     constructor(jkfData: Object, mode: number) {
 
         this.mode = mode;
@@ -302,7 +311,7 @@ export default class KifuData {
         if (_.has(jkfData, 'moves')) {
             this.initMoves = jkfData['moves'];
         } else {
-            this.initMoves = [];
+            this.initMoves = [{}];
         }
 
         this.moves = _.cloneDeep(this.initMoves);
@@ -311,26 +320,15 @@ export default class KifuData {
         // 全てのforkを0として初期の分岐を作成
         this.makeInitialMove();
 
-        // TODO: ここの判断はjkfのヘッダ情報を利用する？
-        if (this.forkPoints === {}) {
-            this.listmode === SHOGI.LIST.KIFU;
+        // 棋譜か定跡か
+        if (_.isEmpty(this.forkPoints)) {
+            this.listmode = SHOGI.LIST.KIFU;
         } else {
-            this.listmode === SHOGI.LIST.ZYOSEKI;
+            this.listmode = SHOGI.LIST.JOSEKI;
         }
 
         // 平手状態
-        this.initBoard =
-            [
-                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'KY' }],
-                [{}, { color: 1, kind: 'HI' }, {}, {}, {}, {}, {}, { color: 1, kind: 'KA' }, {}],
-                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-            ];
+        this.initBoard = _.cloneDeep(SHOGI.Info.hirateBoard);
         this.initHands = [{}, {}];
         this.color = 0;
 
@@ -350,144 +348,28 @@ export default class KifuData {
                         // 平手は代入済
                         break;
                     case 'KY':     // 香落ち
-                        this.initBoard =
-                            [
-                                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, {}],
-                                [{}, { color: 1, kind: 'HI' }, {}, {}, {}, {}, {}, { color: 1, kind: 'KA' }, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
-                        break;
-                    case 'KY_R':     // 右香落ち
-                        this.initBoard =
-                            [
-                                [{}, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'KY' }],
-                                [{}, { color: 1, kind: 'HI' }, {}, {}, {}, {}, {}, { color: 1, kind: 'KA' }, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.KYO]);
                         break;
                     case 'KA':     // 角落ち
-                        this.initBoard =
-                            [
-                                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'KY' }],
-                                [{}, { color: 1, kind: 'HI' }, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.KAKU]);
                         break;
                     case 'HI':     // 飛車落ち
-                        this.initBoard =
-                            [
-                                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'KY' }],
-                                [{}, {}, {}, {}, {}, {}, {}, { color: 1, kind: 'KA' }, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.HISHA]);
                         break;
                     case 'HIKY':  // 飛香落ち
-                        this.initBoard =
-                            [
-                                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, { color: 1, kind: 'KA' }, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.HIKYO]);
                         break;
                     case '2':  // 2枚落ち
-                        this.initBoard =
-                            [
-                                [{ color: 1, kind: 'KY' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, { color: 1, kind: 'KY' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.NI]);
                         break;
                     case '4':  // 4枚落ち
-                        this.initBoard =
-                            [
-                                [{}, { color: 1, kind: 'KE' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, { color: 1, kind: 'KE' }, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.YON]);
                         break;
                     case '6':  // 6枚落ち
-                        this.initBoard =
-                            [
-                                [{}, {}, { color: 1, kind: 'GI' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, { color: 1, kind: 'GI' }, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.ROKU]);
                         break;
                     case '8':  // 8枚落ち
-                        this.initBoard =
-                            [
-                                [{}, {}, {}, { color: 1, kind: 'KI' }, { color: 1, kind: 'OU' }, { color: 1, kind: 'KI' }, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
-                        break;
-                    case '10':  // 10枚落ち
-                        this.initBoard =
-                            [
-                                [{}, {}, {}, {}, { color: 1, kind: 'OU' }, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }, { color: 1, kind: 'FU' }],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{}, {}, {}, {}, {}, {}, {}, {}, {}],
-                                [{ color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }, { color: 0, kind: 'FU' }],
-                                [{}, { color: 0, kind: 'KA' }, {}, {}, {}, {}, {}, { color: 0, kind: 'HI' }, {}],
-                                [{ color: 0, kind: 'KY' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'OU' }, { color: 0, kind: 'KI' }, { color: 0, kind: 'GI' }, { color: 0, kind: 'KE' }, { color: 0, kind: 'KY' }]
-                            ];
+                        this.initBoard = _.cloneDeep(SHOGI.Info.komaochiBoards[SHOGI.KOMAOCHI.HACHI]);
                         break;
                     case 'OTHER':  // その他
                         if (_.has(jkfData['initial'], 'data')) {
@@ -516,6 +398,15 @@ export default class KifuData {
                     default:
                         // 該当のプリセットなし
                         throw new KifuDataError('jkf preset not found');
+                }
+            }
+
+            // 定跡かどうかを判定
+            if (_.has(jkfData['initial'], 'mode')) {
+                if(jkfData['initial']['mode'] === 'KIFU') {
+                    this.listmode = SHOGI.LIST.KIFU;
+                }else if(jkfData['initial']['mode'] === 'JOSEKI'){
+                    this.listmode = SHOGI.LIST.JOSEKI;
                 }
             }
         } else {
@@ -571,11 +462,10 @@ export default class KifuData {
     public getForkMove(moveNum: number, forkNum: number): MoveInfo {
         // TODO: 分岐を持つ指し手の削除時にエラー発生?
         if (_.has(this.forkPoints, moveNum)) {
-            console.log('[moveArray in getForkMove]', this._moveArray);
             return <MoveInfo>this._moveArray[moveNum][forkNum];
         } else {
             throw new KifuDataError('_moveArray[forkNum] is not Array');
-            //return <MoveInfo>this._moveArray[moveNum];
+            // return <MoveInfo>this._moveArray[moveNum];
         }
     }
 
@@ -746,30 +636,6 @@ export default class KifuData {
     }
 
     /**
-     * 棋譜上の位置指定から盤面配列の位置指定に変換
-     * 
-     * @param x: ビュー配列上の横位置
-     * @param y: ビュー配列上の縦位置
-     * 
-     * @return KifuPos
-     */
-    private kifuposToPos(kx: number, ky: number): KifuPos {
-        return new KifuPos(9 - kx, ky - 1);
-    }
-
-    /**
-     * 盤面配列の位置指定から棋譜上の位置指定に変換
-     * 
-     * @param x: ビュー配列上の横位置
-     * @param y: ビュー配列上の縦位置
-     * 
-     * @return KifuPos
-     */
-    private posToKifupos(x: number, y: number): KifuPos {
-        return new KifuPos(9 - x, y + 1);
-    }
-
-    /**
      * 現在の盤面の駒を返す
      * 
      * @param x: 盤面の横位置
@@ -781,21 +647,6 @@ export default class KifuData {
         const pos = this.kifuposToPos(kx, ky);
 
         return this._board[pos.y][pos.x];
-    }
-
-    /**
-     * 盤面の駒を更新
-     * 
-     * @param x: 盤面の横位置
-     * @param y: 盤面の縦位置
-     * 
-     * @param info: 更新後の駒情報
-     * 
-     */
-    private setBoardPiece(kx: number, ky: number, info: Object) {
-        const pos = this.kifuposToPos(kx, ky);
-
-        this._board[pos.y][pos.x] = _.cloneDeep(info);
     }
 
     /**
@@ -866,46 +717,6 @@ export default class KifuData {
     }
 
     /**
-     * 持ち駒を追加
-     * 
-     * @param komaString: 駒名
-     * 
-     * @param info: 更新後の駒情報
-     * 
-     */
-    private addHand(player: number, komaString: string) {
-        if (_.has(this._hands, player)) {
-            if (_.has(this._hands[player], komaString)) {
-                this._hands[player][komaString]++;
-            } else {
-                this._hands[player][komaString] = 1;
-            }
-        } else {
-            throw new KifuDataError('illigal player number');
-        }
-    }
-
-    /**
-     * 持ち駒を減らす
-     * 
-     * @param komaString: 駒名
-     * 
-     * @param info: 更新後の駒情報
-     * 
-     */
-    private deleteHand(player: number, komaString: string) {
-        if (_.has(this._hands, player)) {
-            if (_.has(this._hands[player], komaString)) {
-                this._hands[player][komaString]--;
-            } else {
-                throw new KifuDataError('illigal komaString number');
-            }
-        } else {
-            throw new KifuDataError('illigal player number');
-        }
-    }
-
-    /**
      * 現在の両者持ち駒を返す
      * 
      * @return Array<Object>
@@ -921,46 +732,6 @@ export default class KifuData {
      */
     public get moveArray(): Array<MoveInfo | { [key: number]: MoveInfo; }> {
         return this._moveArray;
-    }
-
-    /**
-     * 現在の指し手配列に新たな指し手を追加
-     * 
-     * @param moves: 追加する指し手配列
-     * 
-     * @return number
-     */
-    private moveArrayAdd(moves) {
-        let forkArray: { [key: number]: MoveInfo; } = null;
-        let forkNum = 1;
-
-        const moveLength = moves.length;
-
-        // forkPointsを更新する際に使う
-        const addPoint = _.size(this._moveArray);
-
-        for (let i = 0; i < moveLength; i++) {
-            const isFork = _.has(moves[i], 'forks');
-
-            if (!isFork) {
-                this._moveArray.push(new MoveInfo(moves[i], false));
-            } else {
-                forkArray = {};
-
-                forkArray[0] = new MoveInfo(moves[i], true);
-
-                // 初期の分岐はひとつめのものを使う
-                this.forkPoints[addPoint + i] = 0;
-
-                forkNum = 1;
-                _.each(moves[i]['forks'], (forkMove) => {
-                    forkArray[forkNum] = new MoveInfo(forkMove[0], true);
-                    forkNum++;
-                });
-
-                this._moveArray.push(_.cloneDeep(forkArray));
-            }
-        }
     }
 
     /**
@@ -1022,14 +793,19 @@ export default class KifuData {
 
             const addMoveInfo: MoveInfo = new MoveInfo(move, true);
             this._moveArray[moveNum] = {0:originMoveInfo, 1:addMoveInfo};
-
-            console.log('[moveArray modify]', this._moveArray[moveNum]);
         }
-
-        console.log(['moveArray in moveArrayForkAdd'], this._moveArray);
     }
 
-    // TODO: moveオブジェクトを作成する
+    /**
+     * 指し手オブジェクトを作成する
+     * 
+     * @param komaType: 駒番号
+     * @param fromX: 移動前のX位置 持ち駒から置く場合はnull
+     * @param fromY: 移動前のY位置 持ち駒から置く場合はnull
+     * @param toX: 移動後のX位置 持ち駒から置く場合はnull
+     * @param toY: 移動後のY位置 持ち駒から置く場合はnull
+     * @param promote: 成るかどうか
+     */
     public makeMoveData(komaType: number, fromX: number, fromY: number, toX: number, toY: number, promote: boolean): Object {
 
         // 前の指し手を取得
@@ -1055,9 +831,8 @@ export default class KifuData {
             moveInfoObj['from'] = { x: fromPos.x, y: fromPos.y };
 
             // TODO:komaTypeと答え合わせする？
-        } else {
-            // 持ち駒を置く場合
         }
+        // 持ち駒を置く場合はfromプロパティはなし
 
         // 成る場合promoteプロパティを追加
         if (promote) {
@@ -1079,6 +854,213 @@ export default class KifuData {
                     throw new KifuDataError('自分の駒を取る移動です。');
                 }
                 moveInfoObj['capture'] = toPosObj['kind'];
+            }
+        }
+
+        // toの位置に移動できる同じ種類の駒の位置を格納する
+        const rivals = [];
+
+        // ベクトル移動可能かどうか
+        let dirMovable = false;
+
+        // TODO: 飛車・角の判定がおかしい
+        _.each(this.board, (boardRow, y) => {
+            _.each(boardRow, (koma, x) => {
+                // 同じ種類の駒がある場合は相対情報を追加しなければならない可能性がある
+                if(_.has(koma, 'kind')) {
+                    if(koma['kind'] === moveInfoObj['piece'] && koma['color'] === moveInfoObj['color'] && (x !== fromX || y !== fromY)) {
+
+                        const komaMoves = SHOGI.Info.getMoves(komaType);
+
+                        // 候補の駒がtoの位置に到達しうる場合trueを代入
+                        const relative: boolean =
+                        _.some(komaMoves, (move) => {
+                            // 駒の動きをひとつずつ検討し、toPosの位置に到達する可能性を検討する
+                            let mx = move['x'];
+                            let my = move['y'];
+
+
+                            if (!color) {
+                                // 先手の場合
+                                my *= (-1);
+                            } else {
+                                // 後手の場合
+                                mx *= (-1);
+                            }
+
+                            switch (move['type']) {
+                                case 'pos':
+                                    if (this.inRange(y + my, x + mx)) {
+                                        if((x + mx) === toX && (y + my) === toY){
+                                            return true;
+                                        }
+                                    }
+                                    break;
+                                case 'dir':
+                                    dirMovable = true;
+
+                                    let movable = true;
+                                    let nextX = x;
+                                    let nextY = y;
+
+                                    while (movable) {
+                                        nextX += mx;
+                                        nextY += my;
+                                        if (this.inRange(nextY, nextX)) {
+                                            if (_.isEmpty(this._board[nextY][nextX])) {
+                                                if(nextX === toX && nextY === toY){
+                                                    return true;
+                                                }
+                                            } else {
+                                                movable = false;
+                                                if(nextX === toX && nextY === toY){
+                                                    return true;
+                                                }
+                                            }
+                                        } else {
+                                            movable = false;
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    throw new KifuDataError('未知の移動タイプです。');
+                            }
+
+                            return false;
+                        })
+
+                        
+                        if(relative) {
+                            rivals.push(new KifuPos(x, y));
+                        }
+                    }
+                }
+            })
+        });
+
+        if(!_.isEmpty(rivals)) {
+            // toの位置に同じ種類の駒が移動できる場合相対情報を追加
+            moveInfoObj['relative'] = '';
+
+            if(fromX != null && fromY != null) {
+                // 同一x軸に他に駒がない
+                let onlyX = true;
+
+                // 同一y軸に他に駒がない
+                let onlyY = true;
+
+                // 一番左ならtrue
+                let isLeft = true;
+
+                // 一番右ならtrue
+                let isRight = true;
+
+                // 一番上ならtrue
+                let isUp = true;
+
+                // 一番下ならtrue
+                let isDown = true;
+
+                _.each(rivals, (pos: KifuPos) => {
+                    if(color === SHOGI.PLAYER.SENTE) {
+                        if(pos.x < fromX) {
+                            isLeft = false;
+                        }else if(pos.x > fromX) {
+                            isRight = false;
+                        }else {
+                            onlyX = false;
+                        }
+
+                        if(pos.y < fromY) {
+                            isDown = false;
+                        }else if(pos.y > fromY) {
+                            isUp = false;
+                        }else {
+                            onlyY = false;
+                        }
+                    }else {
+                        // 後手の場合
+                        if(pos.x < fromX) {
+                            isRight = false;
+                        }else if(pos.x > fromX) {
+                            isLeft = false;
+                        }else {
+                            onlyX = false;
+                        }
+
+                        if(pos.y < fromY) {
+                            isUp = false;
+                        }else if(pos.y > fromY) {
+                            isDown = false;
+                        }else {
+                            onlyY = false;
+                        }
+                    }
+                });
+
+                // 全てが横並びならtrue
+                let sideBySide = (isUp && isDown) ? true : false;
+
+                // 全てが縦並びならtrue
+                let tandem = (isLeft && isRight) ? true : false;
+
+                // 右、左、直
+                let XrelStr: string = '';
+
+                // 上、引、寄
+                let YrelStr: string = '';
+
+                if(isRight && !isLeft) {
+                    XrelStr = 'R';
+                }else if(!isRight && isLeft) {
+                    XrelStr = 'L';
+                }
+
+                if(!dirMovable && fromX === toX) {
+                    if(color === SHOGI.PLAYER.SENTE && fromY > toY) {
+                        XrelStr = 'C';
+                    }else if(color === SHOGI.PLAYER.GOTE && fromY < toY) {
+                        // 後手
+                        XrelStr = 'C';
+                    }
+                }
+
+                // ここの条件が違う
+                if(fromY > toY) {
+                    YrelStr = 'U';
+
+                    if(XrelStr === 'C') {
+                        YrelStr = '';
+                    }
+                }else if(fromY < toY) {
+                    YrelStr = 'D';
+                }else {
+                    YrelStr = 'M';
+                }
+
+                if(sideBySide && tandem) {
+                    throw new KifuDataError('相対情報の判定エラー');
+                }else if(sideBySide && !tandem) {
+                    moveInfoObj['relative'] = XrelStr;
+                }else if(!sideBySide && tandem) {
+                    moveInfoObj['relative'] = YrelStr;
+                }else {
+                    // !sideBySide && !tandemの場合
+
+                    if(onlyX && onlyY) {
+                        moveInfoObj['relative'] = XrelStr;
+                    }else if(onlyX && !onlyY) {
+                        moveInfoObj['relative'] = XrelStr;
+                    }else if(!onlyX && onlyY) {
+                        moveInfoObj['relative'] = YrelStr;
+                    }else {
+                        moveInfoObj['relative'] = XrelStr + YrelStr;
+                    }
+                }
+
+            }else {
+                // 持ち駒から置く場合は「打」のみで終了
+                moveInfoObj['relative'] = 'H';
             }
         }
 
@@ -1225,10 +1207,10 @@ export default class KifuData {
 
             const color = targetKoma['color'];
 
-            //移動対象の駒座標
+            // 移動対象の駒座標
             const pos = new KifuPos(x, y);
 
-            if (targetKoma['kind'] != SHOGI.Info.komaItoa(komaType)) {
+            if (targetKoma['kind'] !== SHOGI.Info.komaItoa(komaType)) {
                 throw new KifuDataError('盤面の駒と移動対象駒が一致しません。');
             }
 
@@ -1254,7 +1236,7 @@ export default class KifuData {
                             if (_.isEmpty(this._board[pos.y + my][pos.x + mx])) {
                                 area[pos.y + my][pos.x + mx] = 1;
                             } else {
-                                if (this._board[pos.y + my][pos.x + mx]['color'] != color) {
+                                if (this._board[pos.y + my][pos.x + mx]['color'] !== color) {
                                     area[pos.y + my][pos.x + mx] = 1;
                                 }
                             }
@@ -1272,7 +1254,7 @@ export default class KifuData {
                                 if (_.isEmpty(this._board[nextY][nextX])) {
                                     area[nextY][nextX] = 1;
                                 } else {
-                                    if (this._board[nextY][nextX]['color'] != color) {
+                                    if (this._board[nextY][nextX]['color'] !== color) {
                                         area[nextY][nextX] = 1;
                                     }
 
@@ -1334,7 +1316,7 @@ export default class KifuData {
                 if(!_.isEmpty(koma)) {
                     // 手番のプレーヤーが持つ駒だけが移動可能判定対象
                     if(koma['color'] === this.color) {
-                        //配置対象の駒座標
+                        // 配置対象の駒座標
                         const pos = new KifuPos(x, y);
 
                         // 駒の移動配列
@@ -1383,82 +1365,6 @@ export default class KifuData {
         } else {
             return area;
         }
-    }
-
-    // x,yが範囲内かどうか調べる
-    private inRange(x: number, y: number): boolean {
-        if (x >= 0 && x < 9 && y >= 0 && y < 9) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-    * 駒を指定地点に配置可能かどうかを判定
-    * 
-    * @param posX: 配置X座標
-    * @param posY: 配置Y座標
-    * @param komaType: 駒番号
-    * @param color: 手番のプレイヤー
-    * 
-    */
-    private canSet(posX: number, posY: number, komaType: number, color: number): boolean {
-
-        const komaMoves = SHOGI.Info.getMoves(komaType);
-
-        // 配置場所がemptyでないならその時点でfalse
-        if(!_.isEmpty(this._board[posY][posX])) {
-            return false;
-        }
-
-        //配置対象の駒座標
-        const pos = new KifuPos(posX, posY);
-
-        // 駒の動きをひとつずつ検討し、ひとつでも移動可能を検知したらtrueを返す
-        const canset =
-        _.some(komaMoves, (move) => {
-            let mx = move['x'];
-            let my = move['y'];
-
-
-            if (!color) {
-                // 先手の場合
-                my *= (-1);
-            } else {
-                // 後手の場合
-                mx *= (-1);
-            }
-
-            if (this.inRange(pos.y + my, pos.x + mx)) {
-                if(komaType !== SHOGI.KOMA.FU) {
-                    // 移動タイプにかかわらずx,yで判定すればよい
-                    return true;
-                }else {
-                    // 歩の場合二歩判定
-                    // TODO: 相手の駒も判定してしまう問題を改善
-                    const settable =
-                    _.every(this._board,(boardRow) => {
-                        const sameColKoma = boardRow[pos.x];
-                        if(_.isEmpty(sameColKoma)) {
-                            return true;
-                        }else {
-                            if(sameColKoma['kind'] === SHOGI.Info.komaItoa(SHOGI.KOMA.FU)) {
-                                return false;
-                            }else {
-                                return true;
-                            }
-                        }
-                    });
-
-                    return settable;
-                }
-            }
-
-            return false;
-        });
-
-        return canset;
     }
 
     /**
@@ -1570,7 +1476,6 @@ export default class KifuData {
             this.forkPoints[moveNum] --;
         }
 
-        //const edgeData = this.getEdgeMoveObjData(moveNum);
         const edgeData = this.getOriginMoveObjData(moveNum);
         const targetMoveObj = edgeData['moveObj'];
         const basePos = edgeData['basePos'];
@@ -1587,13 +1492,10 @@ export default class KifuData {
             _.unset(this.forkPoints, moveNum);
         }
 
-        //TODO: 分岐が消える場合forkPointsの削除処理
+        // TODO: 分岐が消える場合forkPointsの削除処理
 
         // 指し手配列を削除
         this.moveArrayDelete(moveNum, forkNum);
-        console.log('[moveArray in deleteFork]', this.moveArray);
-        console.log('[moves in deleteFork]',this.moves);
-        console.log('[forkPoints in deleteFork]',this.forkPoints);
     }
 
     /**
@@ -1688,7 +1590,210 @@ export default class KifuData {
         }
     }
 
+    /**
+     * 棋譜上の位置指定から盤面配列の位置指定に変換
+     * 
+     * @param x: ビュー配列上の横位置
+     * @param y: ビュー配列上の縦位置
+     * 
+     * @return KifuPos
+     */
+    private kifuposToPos(kx: number, ky: number): KifuPos {
+        return new KifuPos(9 - kx, ky - 1);
+    }
+
+    /**
+     * 盤面配列の位置指定から棋譜上の位置指定に変換
+     * 
+     * @param x: ビュー配列上の横位置
+     * @param y: ビュー配列上の縦位置
+     * 
+     * @return KifuPos
+     */
+    private posToKifupos(x: number, y: number): KifuPos {
+        return new KifuPos(9 - x, y + 1);
+    }
+
+    /**
+     * 持ち駒を追加
+     * 
+     * @param komaString: 駒名
+     * 
+     * @param info: 更新後の駒情報
+     * 
+     */
+    private addHand(player: number, komaString: string) {
+        if (_.has(this._hands, player)) {
+            if (_.has(this._hands[player], komaString)) {
+                this._hands[player][komaString]++;
+            } else {
+                this._hands[player][komaString] = 1;
+            }
+        } else {
+            throw new KifuDataError('illigal player number');
+        }
+    }
+
+    /**
+     * 持ち駒を減らす
+     * 
+     * @param komaString: 駒名
+     * 
+     * @param info: 更新後の駒情報
+     * 
+     */
+    private deleteHand(player: number, komaString: string) {
+        if (_.has(this._hands, player)) {
+            if (_.has(this._hands[player], komaString)) {
+                this._hands[player][komaString]--;
+            } else {
+                throw new KifuDataError('illigal komaString number');
+            }
+        } else {
+            throw new KifuDataError('illigal player number');
+        }
+    }
+
+    /**
+     * 盤面の駒を更新
+     * 
+     * @param x: 盤面の横位置
+     * @param y: 盤面の縦位置
+     * 
+     * @param info: 更新後の駒情報
+     * 
+     */
+    private setBoardPiece(kx: number, ky: number, info: Object) {
+        const pos = this.kifuposToPos(kx, ky);
+
+        this._board[pos.y][pos.x] = _.cloneDeep(info);
+    }
+
+    // x,yが範囲内かどうか調べる
+    private inRange(x: number, y: number): boolean {
+        if (x >= 0 && x < 9 && y >= 0 && y < 9) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 駒を指定地点に配置可能かどうかを判定
+     * 
+     * @param posX: 配置X座標
+     * @param posY: 配置Y座標
+     * @param komaType: 駒番号
+     * @param color: 手番のプレイヤー
+     * 
+     */
+    private canSet(posX: number, posY: number, komaType: number, color: number): boolean {
+
+        const komaMoves = SHOGI.Info.getMoves(komaType);
+
+        // 配置場所がemptyでないならその時点でfalse
+        if(!_.isEmpty(this._board[posY][posX])) {
+            return false;
+        }
+
+        // 配置対象の駒座標
+        const pos = new KifuPos(posX, posY);
+
+        // 駒の動きをひとつずつ検討し、ひとつでも移動可能を検知したらtrueを返す
+        const canset =
+        _.some(komaMoves, (move) => {
+            let mx = move['x'];
+            let my = move['y'];
+
+
+            if (!color) {
+                // 先手の場合
+                my *= (-1);
+            } else {
+                // 後手の場合
+                mx *= (-1);
+            }
+
+            if (this.inRange(pos.y + my, pos.x + mx)) {
+                if(komaType !== SHOGI.KOMA.FU) {
+                    // 移動タイプにかかわらずx,yで判定すればよい
+                    return true;
+                }else {
+                    // 歩の場合二歩判定
+                    const settable =
+                    _.every(this._board,(boardRow) => {
+                        const sameColKoma = boardRow[pos.x];
+                        if(_.isEmpty(sameColKoma)) {
+                            return true;
+                        }else {
+                            if(sameColKoma['kind'] === SHOGI.Info.komaItoa(SHOGI.KOMA.FU) && sameColKoma['color'] === color) {
+                                return false;
+                            }else {
+                                return true;
+                            }
+                        }
+                    });
+
+                    return settable;
+                }
+            }
+
+            return false;
+        });
+
+        return canset;
+    }
+
+    /**
+     * 現在の指し手配列に新たな指し手を追加
+     * 
+     * @param moves: 追加する指し手配列
+     * 
+     * @return number
+     */
+    private moveArrayAdd(moves) {
+        let forkArray: { [key: number]: MoveInfo; } = null;
+        let forkNum = 1;
+
+        const moveLength = moves.length;
+
+        // forkPointsを更新する際に使う
+        const addPoint = _.size(this._moveArray);
+
+        for (let i = 0; i < moveLength; i++) {
+            const isFork = _.has(moves[i], 'forks');
+
+            if (!isFork) {
+                this._moveArray.push(new MoveInfo(moves[i], false));
+            } else {
+                forkArray = {};
+
+                forkArray[0] = new MoveInfo(moves[i], true);
+
+                // 初期の分岐はひとつめのものを使う
+                this.forkPoints[addPoint + i] = 0;
+
+                forkNum = 1;
+                _.each(moves[i]['forks'], (forkMove) => {
+                    forkArray[forkNum] = new MoveInfo(forkMove[0], true);
+                    forkNum++;
+                });
+
+                this._moveArray.push(_.cloneDeep(forkArray));
+            }
+        }
+    }
+
     // TODO: リファクタ switchFork前にmoveArrayを直接いじる必要がないようにする
+    // TODO: KifuPosのnull対応
     // TODO: 重複棋譜の入力を除外する処理の追加
     // TODO: movesのコメントが変更されているか確認
+    // TODO: 分岐選択で選択中分岐をわかりやすく
+    // TODO: bulma-tooltipでヒント表示
+    // TODO: 王の持ち駒制限
+    // TODO: 強制成り対応
+    // TODO: 投了実装
+    // TODO: 盤面新規作成モードの作成
+    // TODO: customToInput時のふるまいを実装
+    // TODO: 盤面反転時成り判定修正
 }

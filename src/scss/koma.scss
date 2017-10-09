@@ -2,8 +2,12 @@
 
 .c-koma_piece {
     flex: 1;
-    width: 43px;
-    height: 48px;
+    width: $koma-width;
+    height: $koma-height;
+}
+
+.c-koma_piece.is-ready {
+    opacity: 0.5;
 }
 
 .c-koma_prop_fu {
@@ -156,33 +160,37 @@
     z-index: 125;
 }
 
-.c-koma_nari_container {
+.c-koma_menu_container {
     position: absolute;
     right: -1px;
     top: 1px;
-    width: 43px;
-    height: 48px;
+    width: $koma-width;
+    height: $koma-height;
     border: groove 1px;
     //background-color: rgba(1, 1, 1, 0.2);
 }
 
-.c-koma_nari_button {
+.c-koma_half_button {
     font-size: 15px;
     background-color: rgba(255, 255, 255, 0.5);
     text-align: center;
     vertical-align: middle;
     height: 50%;
     cursor: pointer;
+    font-weight: bold;
 }
 
-.c-koma_nari_button.is-nari {
+.c-koma_half_button.is-nari {
     color: #fff;
     background-color: rgba(255, 56, 96, 0.7);
-    font-weight: bold;
 }
 
-.c-koma_nari_button.is-funari {
+.c-koma_half_button.is-funari {
     color: #555;
     background-color: rgba(255, 255, 255, 0.7);
-    font-weight: bold;
+}
+
+.c-koma_half_button.is-change {
+    color: #fff;
+    background-color: rgba(96, 56, 255, 0.7);
 }

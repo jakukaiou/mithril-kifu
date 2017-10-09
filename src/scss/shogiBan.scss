@@ -9,8 +9,8 @@
 .c-shogiBan_grid {
     position: absolute;
     left: 0;
-    width: 410px;
-    height: 454px;
+    width: $shogiBan-width;
+    height: $shogiBan-height;
     z-index: 100;
 
     @include picture('/images/grid/masu_dot_xy.png');
@@ -19,7 +19,7 @@
 // 将棋盤の最背面レイヤー
 .c-shogiBan_bg {
     width: 604px;
-    height: 454px;
+    height: $shogiBan-height;
     padding-left: 0;
     background-color: #874824;
 }
@@ -28,8 +28,8 @@
 .c-shogiBan_base {
     position: absolute;
     left: 0;
-    width: 410px;
-    height: 454px;
+    width: $shogiBan-width;
+    height: $shogiBan-height;
     z-index: 90;
 
     @include picture('/images/ban/ban_kaya_a.png');
@@ -51,27 +51,97 @@
 
 .c-shogiBan_hand {
     height: 192px;
+    position: relative;
 
     // 影の描写
     box-shadow: 4px 4px 7px 0 #253842;
 }
 
-.c-shogiBan_hand_base {
-    position: absolute;
-}
-
 .c-shogiBan_hand_pieces {
     position: absolute;
     z-index: 20;
+    width: 172px;
+    height: 96px;
+    transition: 0.4s;
+}
+
+.c-shogiBan_hand_pieces.is-oppoHands {
+    background-color: rgba($gote-color, 0.4);
+    color: #4a4a4a;
+}
+
+.c-shogiBan_hand_pieces.is-propHands {
+    background-color: rgba($sente-color, 0.4);
+    color: #4a4a4a;
+    top: 96px;
+}
+
+.c-shogiBan_hand_pieces.is-oppoHands.is-adding {
+    background-color: rgba(#4a4a4a, 0.6);
+    color: #fff;
+}
+
+.c-shogiBan_hand_pieces.is-propHands.is-adding {
+    background-color: rgba(#4a4a4a, 0.6);
+    color: #fff;
+}
+
+.c-shogiBan_hand_pieces.is-button {
+    top: 96px;
+}
+
+.c-shogiBan_createButton {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.c-shogiBan_hand_pieces_inner {
+    position: absolute;
+    z-index: 40;
+}
+
+.c-shogiBan_hand_owner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    z-index: 30;
 }
 
 .c-shogiBan_oppo_hand {
-    margin-bottom: 48px;
+    margin-bottom: $koma-height;
 }
 
 .c-shogiBan_hand_base {
     width: 172px;
     height: 192px;
+    position: absolute;
 
-    @include picture('/images/ban/koma_hold.png');
+    @include picture('/images/ban/ban_kaya_a.png');
+}
+
+.c-shogiBan_menu_place {
+    width: 172px;
+    display: flex;
+}
+
+.c-shogiBan_menu_base {
+    background-color: #000;
+    opacity: 0.8;
+    height: $shogiBan-height;
+    width: 194px;
+    position: absolute;
+    left: $shogiBan-width;
+    z-index: 210;
+    padding: 12px;
 }

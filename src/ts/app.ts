@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import * as firebase from 'firebase';
 
 import '../scss/main.scss';
 import KifuApp from './kifuApp';
@@ -27,28 +28,30 @@ const jkfData = {
     },
     initial: {
         'preset': 'OTHER',
-            'data': {
-                // 初期配置
-                board: [
-                    [{color: 1, kind : 'KY'}, {color: 1, kind : 'KE'}, {color: 1, kind : 'GI'}, {color: 1, kind : 'KI'}, {color: 1, kind : 'OU'}, {color: 1, kind : 'KI'}, {color: 1, kind : 'GI'}, {color: 1, kind : 'KE'}, {color: 1, kind : 'KY'}],
-                    [{                     }, {color: 1, kind : 'HI'}, {                     }, {                     }, {                     }, {                     }, {                     }, {color: 1, kind : 'KA'}, {                     }],
-                    [{color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}],
-                    [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
-                    [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
-                    [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
-                    [{color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}],
-                    [{                     }, {color: 0, kind : 'KA'}, {                     }, {                     }, {                     }, {                     }, {                     }, {color: 0, kind : 'HI'}, {                     }],
-                    [{color: 0, kind : 'KY'}, {color: 0, kind : 'KE'}, {color: 0, kind : 'GI'}, {color: 0, kind : 'KI'}, {color: 0, kind : 'OU'}, {color: 0, kind : 'KI'}, {color: 0, kind : 'GI'}, {color: 0, kind : 'KE'}, {color: 0, kind : 'KY'}]
-                ],
-                // 0なら先手、それ以外なら後手
-                color:  0,
+        'data': {
+            // 初期配置
+            board: [
+                [{color: 1, kind : 'KY'}, {color: 1, kind : 'KE'}, {color: 1, kind : 'GI'}, {color: 1, kind : 'KI'}, {color: 1, kind : 'OU'}, {color: 1, kind : 'KI'}, {color: 1, kind : 'GI'}, {color: 1, kind : 'KE'}, {color: 1, kind : 'KY'}],
+                [{                     }, {color: 1, kind : 'HI'}, {                     }, {                     }, {                     }, {                     }, {                     }, {color: 1, kind : 'KA'}, {                     }],
+                [{color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}, {color: 1, kind : 'FU'}],
+                [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
+                [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
+                [{                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }, {                     }],
+                [{color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}, {color: 0, kind : 'FU'}],
+                [{                     }, {color: 0, kind : 'KA'}, {                     }, {                     }, {                     }, {                     }, {                     }, {color: 0, kind : 'HI'}, {                     }],
+                [{color: 0, kind : 'KY'}, {color: 0, kind : 'KE'}, {color: 0, kind : 'GI'}, {color: 0, kind : 'KI'}, {color: 0, kind : 'OU'}, {color: 0, kind : 'KI'}, {color: 0, kind : 'GI'}, {color: 0, kind : 'KE'}, {color: 0, kind : 'KY'}]
+            ],
+            // 0なら先手、それ以外なら後手
+            color:  0,
 
-                // hands[0]は先手の持ち駒、hands[1]は後手の持ち駒
-                hands: [
-                    {},
-                    {}
-                ]
-            },
+            // hands[0]は先手の持ち駒、hands[1]は後手の持ち駒
+            hands: [
+                {},
+                {}
+            ]
+        },
+
+        'mode' : 'JOSEKI' // 独自定義 棋譜か定跡かを表す 'KIFU' または 'JOSEKI'
     },
     moves: [
         {comments: ['分岐の例']},
@@ -77,5 +80,12 @@ const jkfData = {
     ]
 };
 
-//new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
-new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
+// 閲覧モード
+// new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
+
+// 編集モード
+// new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
+// new KifuControlApp({}, SHOGI.MODE.EDIT);
+
+// 新規作成モード
+ new KifuControlApp({}, SHOGI.MODE.CREATE);

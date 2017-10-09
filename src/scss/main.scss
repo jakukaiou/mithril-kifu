@@ -1,11 +1,14 @@
 // 運用上の注意: 使用する画像をbuild/配下にも置く
 @import 'normalize/import-now';
 @import '../../node_modules/bulma/bulma.sass';
+@import '../../node_modules/bulma-switch/switch.sass';
+@import '../../node_modules/bulma-tooltip/tooltip.sass';
 @import "mixins";
 @import "vars";
 @import 'shogiBan';
 @import 'toolbar';
 @import 'kifu';
+@import 'create';
 
 // 棋譜表示コンポーネントのコンテナ
 .c-kifuPlayer {
