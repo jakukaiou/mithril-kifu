@@ -699,8 +699,6 @@ export default class KifuData {
             return false;
         }
 
-        console.log('oh promote', fromX, fromY, toX, toY);
-
         if (owner === SHOGI.PLAYER.SENTE) {
             if (toY <= 2 || fromY <= 2) {
                 return true;
