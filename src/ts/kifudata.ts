@@ -699,6 +699,8 @@ export default class KifuData {
             return false;
         }
 
+        console.log('oh promote', fromX, fromY, toX, toY);
+
         if (owner === SHOGI.PLAYER.SENTE) {
             if (toY <= 2 || fromY <= 2) {
                 return true;
@@ -1793,7 +1795,4 @@ export default class KifuData {
     // TODO: 王の持ち駒制限
     // TODO: 強制成り対応
     // TODO: 投了実装
-    // TODO: 盤面新規作成モードの作成
-    // TODO: customToInput時のふるまいを実装
-    // TODO: 盤面反転時成り判定修正
 }

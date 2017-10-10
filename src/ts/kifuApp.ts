@@ -625,7 +625,7 @@ class Koma extends ComponentBasic {
 
                                 // 盤面からの移動の場合のみpromotable判定
                                 if(_.isNumber(viewData.fromX) && _.isNumber(viewData.fromY)) {
-                                    promotable = (viewData.reverse) ? kifuData.isPromotable(viewData.fromKomaType, 8 - viewData.fromX, 8 - viewData.fromY, 8 - x, 8 - y, viewData.movePlayer) : kifuData.isPromotable(viewData.fromKomaType, viewData.fromX, viewData.fromY, x, y, viewData.movePlayer); 
+                                    promotable = (viewData.reverse) ? kifuData.isPromotable(viewData.fromKomaType, 8 - viewData.fromX, 8 - viewData.fromY, x, y, 1 - viewData.movePlayer) : kifuData.isPromotable(viewData.fromKomaType, viewData.fromX, viewData.fromY, x, y, viewData.movePlayer); 
                                 }
 
                                 if(promotable){
@@ -758,7 +758,12 @@ class KifuList extends ComponentBasic {
                             // 閲覧モード時の棋譜リスト
                             _.map(kifuData.moveArray, (moveInfo, num) => {
                                 return [
-                                    m('div', {class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null)}, [
+                                    m('div', {
+                                        class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null),
+                                        onclick: () => {
+                                            kifuData.moveNum = num;
+                                        }
+                                    }, [
                                         m('div', {class: c('c-kifu_move_info')}, [
                                             m('div', {class: c('c-kifu_number')}, num + ':'),
                                             // 6文字以上なら小さく表示
@@ -796,7 +801,12 @@ class KifuList extends ComponentBasic {
                             // TODO: 現在の棋譜が定跡か棋譜かをどこかで管理
                             _.map(kifuData.moveArray, (moveInfo, num) => {
                                 return [
-                                    m('div', {class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null)}, [
+                                    m('div', {
+                                        class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null),
+                                        onclick: () => {
+                                            kifuData.moveNum = num;
+                                        }
+                                    }, [
                                         m('div', {class: c('c-kifu_move_info')}, [
                                             m('div', {class: c('c-kifu_number')}, num + ':'),
                                             // 6文字以上なら小さく表示

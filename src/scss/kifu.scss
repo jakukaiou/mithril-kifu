@@ -16,9 +16,14 @@
     background-color: #e4e2f0;
     height: 512px;
     width: 150px;
-    overflow-y: scroll;
+    overflow-y: auto;
     position: absolute;
     z-index: 200;
+    -ms-overflow-style: none;
+}
+
+.c-kifu_list::-webkit-scrollbar {
+    display: none;
 }
 
 .c-kifu_row {
