@@ -279,6 +279,9 @@ export default class KifuData {
     // 初期の指し手配列
     private initMoves;
 
+    // 初期状態情報オブジェクト
+    private initInfo;
+
     // 編集モードかどうか
     private mode;
 
@@ -334,6 +337,9 @@ export default class KifuData {
 
         // 初期の指し手
         this._moveNum = 0;
+
+        // 平手ならば初期状態情報は空にする
+        this.initInfo = null;
 
         // 特殊な初期状態が登録されているか判定
         if (_.has(jkfData, 'initial')) {
@@ -399,6 +405,22 @@ export default class KifuData {
                         // 該当のプリセットなし
                         throw new KifuDataError('jkf preset not found');
                 }
+
+                this.initInfo = {
+                    'preset': jkfData['initial']['preset'],
+
+                }
+
+                this.initInfo = {};
+                this.initInfo['preset'] = jkfData['initial']['preset'];
+                if(jkfData['initial']['preset'] === 'OTHER') {
+                    // colorはNumberなので値渡し
+                    this.initInfo['data'] = {
+                        'board': this.initBoard,
+                        'color': this.color,
+                        'hands': this.initHands
+                    }
+                }
             }
 
             // 定跡かどうかを判定
@@ -419,6 +441,22 @@ export default class KifuData {
         this._hands = _.cloneDeep(this.initHands);
 
         this._focus = null;
+    }
+
+    /**
+     * jkfオブジェクトを作成する
+     */
+    // TODO: headerDataの保存
+    public createJkfObj():Object {
+        const jkfObj:Object = {};
+
+        if(this.initInfo) {
+            jkfObj['initial'] = this.initInfo;
+        }
+
+        jkfObj['moves'] = this.moves;
+
+        return jkfObj;
     }
 
     /**
@@ -1685,14 +1723,15 @@ export default class KifuData {
      * @param posY: 配置Y座標
      * @param komaType: 駒番号
      * @param color: 手番のプレイヤー
+     * @param onboard: 持ち駒からの配置かどうか
      * 
      */
-    private canSet(posX: number, posY: number, komaType: number, color: number): boolean {
+    public canSet(posX: number, posY: number, komaType: number, color: number, onboard: boolean = true): boolean {
 
         const komaMoves = SHOGI.Info.getMoves(komaType);
 
         // 配置場所がemptyでないならその時点でfalse
-        if(!_.isEmpty(this._board[posY][posX])) {
+        if(!_.isEmpty(this._board[posY][posX]) && onboard) {
             return false;
         }
 
@@ -1704,7 +1743,6 @@ export default class KifuData {
         _.some(komaMoves, (move) => {
             let mx = move['x'];
             let my = move['y'];
-
 
             if (!color) {
                 // 先手の場合
@@ -1721,6 +1759,7 @@ export default class KifuData {
                 }else {
                     // 歩の場合二歩判定
                     const settable =
+                    (onboard) ?
                     _.every(this._board,(boardRow) => {
                         const sameColKoma = boardRow[pos.x];
                         if(_.isEmpty(sameColKoma)) {
@@ -1732,7 +1771,9 @@ export default class KifuData {
                                 return true;
                             }
                         }
-                    });
+                    })
+                    :
+                    true;
 
                     return settable;
                 }
@@ -1793,4 +1834,7 @@ export default class KifuData {
     // TODO: 王の持ち駒制限
     // TODO: 強制成り対応
     // TODO: 投了実装
+    // TODO: ストレージのjsonのロード実装
+    // TODO: ツールチップの表示
+    // TODO: header情報の編集、保存実装
 }

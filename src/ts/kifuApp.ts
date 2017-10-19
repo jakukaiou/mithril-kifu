@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import * as SHOGI from './shogi';
 import ComponentBasic from './componentbasic';
 import KifuData from './kifudata';
+import FirebaseManager from './firebaseManager';
 
 /**
  * エラー処理用クラス
@@ -39,7 +40,7 @@ const STATE = {
     EDITSTART: 7,      // 新規作成した盤面の編集開始ステート
     CUSTOMTOINPUT: 8,  // 盤面作成時の駒の配置先の入力待ちステート
     CUSTOMBANEDIT: 9   // 盤面作成時の駒状態編集ステート
-}
+};
 
 // 盤面上の駒への背景色定義
 const MARK = {
@@ -48,13 +49,13 @@ const MARK = {
     GREEN: 2,
     BLUE: 3,
     YELLOW: 4
-}
+};
 
 // 追加する指し手の種類定義
 const ADDTYPE = {
     NORMAL: 0,
     FORK: 1
-}
+};
 
 /**
  * 表示に関連するプロパティ群を管理するクラス
@@ -287,7 +288,7 @@ class ViewData {
 
         const deleteNum = this.createHands[owner][SHOGI.Info.komaItoa(komaType)];
 
-        for(let i = 0; i<deleteNum; i++){
+        for(let i = 0; i < deleteNum; i++) {
             this.deleteHand(this.createHands[owner], SHOGI.Info.komaItoa(komaType));
             this.addHand(this.unsetPieces, SHOGI.Info.komaItoa(komaType));
         }
@@ -317,7 +318,7 @@ class ViewData {
     // NORMALに戻る
     public switchNormal() {
         this.reset();
-        if(this.state === STATE.READONLY || this.state == STATE.CREATE) {
+        if(this.state === STATE.READONLY || this.state === STATE.CREATE) {
             return;
         }
 
@@ -392,7 +393,7 @@ class UnsetKoma extends ComponentBasic {
                     m('div', {class: c('c-koma_piece', this.className)})
                 ])
             ];
-        }
+        };
     }
 }
 
@@ -433,7 +434,7 @@ class HandEditKoma extends ComponentBasic {
                     m('div', {class: c('c-koma_piece', this.className)})
                 ])
             ];
-        }
+        };
     }
 }
 
@@ -493,7 +494,7 @@ class BanEditKoma extends ComponentBasic {
                     },
                     onmouseout: (event: MouseEvent) => {
                         // 子要素でonmouseoutが起こらないための応急処置
-                        let e:Element = event.toElement || event.relatedTarget as Element;
+                        let e: Element = event.toElement || event.relatedTarget as Element;
                         if(e) {
                             if(e.classList[0] === 'delete'|| e.classList[0] === 'c-koma_menu_container') {
                                 return;
@@ -514,7 +515,7 @@ class BanEditKoma extends ComponentBasic {
                     }, [
                         m('div', {
                             class: c('c-koma_half_button', 'is-change'),
-                            onclick: (e:MouseEvent) => {
+                            onclick: (e: MouseEvent) => {
                                 // 先手・後手の切り替え  
                                 viewData.createBoard[y][x]['color'] = 1 - owner;
 
@@ -524,11 +525,11 @@ class BanEditKoma extends ComponentBasic {
                         }, (owner === SHOGI.PLAYER.SENTE) ? '後手' : '先手'),
                         m('div', {
                             class: c('c-koma_half_button', 'is-nari'),
-                            onclick: (e:MouseEvent) => {
+                            onclick: (e: MouseEvent) => {
                                 // 成り・不成の切り替え
                                 if(promoted) {
                                     viewData.createBoard[y][x]['kind'] = promoted;
-                                }else if(origin){
+                                } else if(origin) {
                                     viewData.createBoard[y][x]['kind'] = origin;
                                 }
 
@@ -551,7 +552,7 @@ class BanEditKoma extends ComponentBasic {
                         m('div', {
                             class: c('delete', 'is-small'),
                             onclick: (e: MouseEvent) => {
-                                if(viewData.state === STATE.CUSTOMCREATE){
+                                if(viewData.state === STATE.CUSTOMCREATE) {
                                     viewData.unsetPiece(x, y);
                                 }
 
@@ -565,7 +566,7 @@ class BanEditKoma extends ComponentBasic {
                     m('div', {class: c('c-koma_piece', (this.isReady) ? 'is-ready' : null, this.className)})
                 ])
             ];
-        }
+        };
     }
 }
 
@@ -621,33 +622,43 @@ class Koma extends ComponentBasic {
                         // 移動先入力状態の場合移動先を選択できる
                         }else if(viewData.state === STATE.TOINPUT) {
                             if(mark === MARK.RED) {
-                                let promotable :boolean = false;
+                                let promotable: boolean = false;
 
                                 // 盤面からの移動の場合のみpromotable判定
                                 if(_.isNumber(viewData.fromX) && _.isNumber(viewData.fromY)) {
                                     promotable = (viewData.reverse) ? kifuData.isPromotable(viewData.fromKomaType, 8 - viewData.fromX, 8 - viewData.fromY, x, y, 1 - viewData.movePlayer) : kifuData.isPromotable(viewData.fromKomaType, viewData.fromX, viewData.fromY, x, y, viewData.movePlayer); 
                                 }
 
-                                if(promotable){
-                                    viewData.switchNariInput(x, y);
-                                }else{
-                                    // 指し手を作成
-                                    // ステートをノーマルに戻す
+                                let isPromote: boolean = false;
 
-                                    const fork = (viewData.addtype === ADDTYPE.FORK) ? true : false;
-                                    const toX = (viewData.reverse) ? (8 - x) : x;
-                                    const toY = (viewData.reverse) ? (8 - y) : y;
-                                    kifuData.moveAdd(viewData.fromKomaType, viewData.fromX, viewData.fromY, toX, toY, false, fork);
-                                    // 分岐入力の場合手をひとつ戻っているので元の状態に戻す
-                                    if(viewData.addtype === ADDTYPE.FORK) {
-                                        kifuData.moveNum ++;
+                                if(promotable) {
+                                    const canSet: boolean = (viewData.reverse) ? kifuData.canSet(x, y, viewData.fromKomaType, 1 - viewData.movePlayer, false) : kifuData.canSet(x, y, viewData.fromKomaType, viewData.movePlayer, false);
+                                    if(canSet) {
+                                        viewData.switchNariInput(x, y);
+                                        return;
+                                    }else {
+                                        // 不成で移動不可の場合は強制成り処理
+                                        isPromote = true;
                                     }
-                                    viewData.reset();
-                                    viewData.switchInput(kifuData.moveNum, kifuData.color, ADDTYPE.NORMAL);
-                                    m.redraw();
-                                    console.log('指し手新規作成');
+                                    
                                 }
-                            }else if(owner === viewData.movePlayer){
+
+                                // 指し手を作成
+                                // ステートをノーマルに戻す
+
+                                const fork = (viewData.addtype === ADDTYPE.FORK) ? true : false;
+                                const toX = (viewData.reverse) ? (8 - x) : x;
+                                const toY = (viewData.reverse) ? (8 - y) : y;
+                                kifuData.moveAdd(viewData.fromKomaType, viewData.fromX, viewData.fromY, toX, toY, isPromote, fork);
+                                // 分岐入力の場合手をひとつ戻っているので元の状態に戻す
+                                if(viewData.addtype === ADDTYPE.FORK) {
+                                    kifuData.moveNum ++;
+                                }
+                                viewData.reset();
+                                viewData.switchInput(kifuData.moveNum, kifuData.color, ADDTYPE.NORMAL);
+                                m.redraw();
+                                console.log('指し手新規作成');
+                            }else if(owner === viewData.movePlayer)  {
                                 viewData.switchInput(viewData.fromNum, viewData.movePlayer,viewData.addtype);
                                 viewData.switchToInput(komaType, x, y);
                             }else {
@@ -664,7 +675,7 @@ class Koma extends ComponentBasic {
                     }, [
                         m('div', {
                             class: c('c-koma_half_button', 'is-nari'),
-                            onclick: (e:MouseEvent) => {
+                            onclick: (e: MouseEvent) => {
                                 // 成り入力状態の場合成・不成を選択できる
                                 if(viewData.state === STATE.NARIINPUT) {
                                     // 成り駒で新規指し手作成
@@ -674,7 +685,7 @@ class Koma extends ComponentBasic {
                                     const toY = (viewData.reverse) ? (8 - y) : y;
                                     kifuData.moveAdd(viewData.fromKomaType, viewData.fromX, viewData.fromY, toX, toY, true, fork);
                                     // 分岐入力の場合手をひとつ戻っているので元の状態に戻す
-                                    if(viewData.addtype == ADDTYPE.FORK) {
+                                    if(viewData.addtype === ADDTYPE.FORK) {
                                         kifuData.moveNum ++;
                                     }
                                     viewData.reset();
@@ -688,7 +699,7 @@ class Koma extends ComponentBasic {
                         }, '成'),
                         m('div', {
                             class: c('c-koma_half_button', 'is-funari'),
-                            onclick: (e:MouseEvent) => {
+                            onclick: (e: MouseEvent) => {
                                 // 成り入力状態の場合成・不成を選択できる
                                 if(viewData.state === STATE.NARIINPUT) {
                                     // 成らずに新規指し手作成
@@ -698,7 +709,7 @@ class Koma extends ComponentBasic {
                                     const toY = (viewData.reverse) ? (8 - y) : y;
                                     kifuData.moveAdd(viewData.fromKomaType, viewData.fromX, viewData.fromY, toX, toY, false, fork);
                                     // 分岐入力の場合手をひとつ戻っているので元の状態に戻す
-                                    if(viewData.addtype == ADDTYPE.FORK) {
+                                    if(viewData.addtype === ADDTYPE.FORK) {
                                         kifuData.moveNum ++;
                                     }
                                     viewData.reset();
@@ -726,8 +737,6 @@ class Koma extends ComponentBasic {
  * 棋譜リストのクラス
  */
 class KifuList extends ComponentBasic {
-
-    // 分岐を表示するかどうか
 
     private selectMoves: {};
 
@@ -762,6 +771,8 @@ class KifuList extends ComponentBasic {
                                         class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null),
                                         onclick: () => {
                                             kifuData.moveNum = num;
+                                            viewData.switchNormal();
+                                            m.redraw();
                                         }
                                     }, [
                                         m('div', {class: c('c-kifu_move_info')}, [
@@ -791,7 +802,7 @@ class KifuList extends ComponentBasic {
                                             ])
                                         ])
                                     ])
-                                ]
+                                ];
                             })
                             :
                             null,
@@ -805,6 +816,14 @@ class KifuList extends ComponentBasic {
                                         class: c('c-kifu_row', (num === kifuData.moveNum) ? 'is-active' : null),
                                         onclick: () => {
                                             kifuData.moveNum = num;
+                                            // 最終盤面になった場合インプットステートにスイッチ
+                                            if(kifuData.moveNum === (kifuData.moveArray.length - 1)) {
+                                                viewData.switchInput(kifuData.moveNum, kifuData.color);
+                                            }else {
+                                                viewData.switchNormal();
+                                            }
+
+                                            m.redraw();
                                         }
                                     }, [
                                         m('div', {class: c('c-kifu_move_info')}, [
@@ -812,15 +831,20 @@ class KifuList extends ComponentBasic {
                                             // 6文字以上なら小さく表示
                                             m('div', {class: c('c-kifu_move', (kifuData.getMove(num).moveName.length >= 6)? 'is-small': null)}, kifuData.getMove(num).moveName),
                                             m('div', {class: c('c-kifu_notation')}, [
-                                                ((kifuData.getMove(num).fork) || (num === kifuData.moveNum)) && (num != 0) && (kifuData.listmode === SHOGI.LIST.JOSEKI) ?
+                                                ((kifuData.getMove(num).fork) || (num === kifuData.moveNum)) && (num !== 0) && (kifuData.listmode === SHOGI.LIST.JOSEKI) ?
                                                 m('span', 
                                                 {
                                                     class: c('c-kifu_notation_branch', 'icon', 'is-small'),
-                                                    onclick: () => {
+                                                    onclick: (e: MouseEvent) => {
                                                         // 分岐棋譜の表示処理
+                                                        console.log('oh disp forklist');
                                                         viewData.openFork = true;
                                                         this.selectMoves = kifuData.getForkList(num);
                                                         this.forkPoint = num;
+
+                                                        e.stopPropagation();
+
+                                                        console.log(this.selectMoves);
                                                     }
                                                 },[
                                                     m('i',{class: c('fa', 'fa-clone')})
@@ -843,7 +867,7 @@ class KifuList extends ComponentBasic {
                                             ])
                                         ])
                                     ])
-                                ]
+                                ];
                             })
                             :
                             null
@@ -886,7 +910,7 @@ class KifuList extends ComponentBasic {
                                             m('div', {class: c('c-kifu_move')}, kifuData.getForkMove(this.forkPoint, forkNum).moveName),
                                         ])
                                     ])
-                                ]
+                                ];
                             })
                         ])
                         :
@@ -933,7 +957,7 @@ class KifuList extends ComponentBasic {
                                 ])
                             ]),
                             _.map(this.selectMoves, (moveInfo, num) => {
-                                const forkNum : number = +num;
+                                const forkNum: number = +num;
                                 const isActive: boolean = (kifuData.getFork(this.forkPoint) === forkNum)? true : false;
 
                                 return [
@@ -966,7 +990,7 @@ class KifuList extends ComponentBasic {
                                             null
                                         ])
                                     ])
-                                ]
+                                ];
                             }),
                             (this.forkPoint === (kifuData.moveNum) || (this.forkPoint === (kifuData.moveNum + 1) && viewData.addtype === ADDTYPE.FORK)) ?
                             m('div', {
@@ -1071,7 +1095,7 @@ class KifuToolBar extends ComponentBasic {
                         }
                     },
                     value: comment,
-                    oninput: m.withAttr('value', (value) =>{
+                    oninput: m.withAttr('value', (value) => {
                         comment = value;
                         kifuData.getMove(targetNum).setComment(comment);
                     })
@@ -1110,7 +1134,7 @@ class KifuToolBar extends ComponentBasic {
                         }, true, playable)),
                         m(new ToolButton('fa-chevron-right', () => {
                             // 最終盤面でないときのみ更新処理をかける
-                            if(kifuData.moveNum < (kifuData.moveArray.length - 1)){
+                            if(kifuData.moveNum < (kifuData.moveArray.length - 1)) {
                                 kifuData.moveNum++;
 
                                 // 最終盤面になった場合インプットステートにスイッチ
@@ -1168,7 +1192,7 @@ class KifuToolBar extends ComponentBasic {
                         }, true, playable)),
                         m(new ToolButton('fa-chevron-right', () => {
                             // 最終盤面でないときのみ更新処理をかける
-                            if(kifuData.moveNum < (kifuData.moveArray.length - 1)){
+                            if(kifuData.moveNum < (kifuData.moveArray.length - 1)) {
                                 kifuData.moveNum++;
 
                                 // 最終盤面になった場合インプットステートにスイッチ
@@ -1196,7 +1220,14 @@ class KifuToolBar extends ComponentBasic {
                             viewData.reverse = !(viewData.reverse);
                             m.redraw();
                         }, false, true, (viewData.reverse) ? 'is-success': null)),
-                    ])
+                        m(new ToolButton('fa-floppy-o', () => {
+                            // 棋譜の保存処理
+
+                            const fbManager = FirebaseManager.sharedManager;
+                            fbManager.kifuSave(kifuData.createJkfObj());
+
+                        }, true, playable))
+                    ]),
                 ])
                 :
                 null,
@@ -1235,7 +1266,7 @@ class Mochigoma extends ComponentBasic {
         // 所持数1以上の駒を4つずつ区切って配列にする
         this.handArray = SHOGI.Util.objChunk(
             _.pickBy(hand, (value, key) => {
-                return (value)? true : false
+                return (value)? true : false;
             }), 4);
 
         this.view = (vnode) => {
@@ -1252,7 +1283,7 @@ class Mochigoma extends ComponentBasic {
                                             }
                                             return m(new Koma(SHOGI.Info.komaAtoi(key), owner, value, viewData, kifuData, null, null));
                                         }else if(viewData.state === STATE.CUSTOMCREATE || viewData.state === STATE.CUSTOMTOINPUT || viewData.state === STATE.CUSTOMBANEDIT) {
-                                            if(viewData.state === STATE.CUSTOMCREATE){
+                                            if(viewData.state === STATE.CUSTOMCREATE) {
                                                 return m(new UnsetKoma(SHOGI.Info.komaAtoi(key), owner, value, viewData, kifuData, MARK.BLUE));
                                             }else if(viewData.state === STATE.CUSTOMTOINPUT && viewData.fromKomaType === SHOGI.Info.komaAtoi(key)) {
                                                 return m(new UnsetKoma(SHOGI.Info.komaAtoi(key), owner, value, viewData, kifuData, MARK.GREEN));
@@ -1320,7 +1351,7 @@ class MochigomaEdit extends ComponentBasic {
         // 所持数1以上の駒を4つずつ区切って配列にする
         this.propHandArray = SHOGI.Util.objChunk(
             _.pickBy(this.propHands, (value, key) => {
-                return (value)? true : false
+                return (value)? true : false;
             }), 4);
         this.propComponents = _.map(this.propHandArray, (handRow: _.Dictionary<number>) => {
                             return  m('div', {class: c('c-koma_row')}, [
@@ -1332,7 +1363,7 @@ class MochigomaEdit extends ComponentBasic {
         
         this.oppoHandArray = SHOGI.Util.objChunk(
             _.pickBy(this.oppoHands, (value, key) => {
-                return (value)? true : false
+                return (value)? true : false;
             }), 4);
         this.oppoComponents = _.map(this.oppoHandArray, (handRow: _.Dictionary<number>) => {
                             return  m('div', {class: c('c-koma_row')}, [
@@ -1429,7 +1460,7 @@ class MochigomaEdit extends ComponentBasic {
                     ]),
                     m('div', {class: c('c-shogiBan_hand_base')})
                 ])
-            ]
+            ];
         }
     }
 }
@@ -1468,7 +1499,7 @@ class ShogiBan extends ComponentBasic {
                 return _.map(boardRow, (koma: Object, x: number) => {
                     return _.cloneDeep(this.getKomaComponent(koma, x, y, viewData, kifuData));
                 });
-        })
+        });
 
         if(mode === SHOGI.MODE.CREATE) {
             this.mochigomaEdit = new MochigomaEdit(viewData.createHands, viewData, kifuData);
@@ -1487,7 +1518,7 @@ class ShogiBan extends ComponentBasic {
             if(viewData.state === STATE.TOINPUT) {
                 this.area = kifuData.makeMoveArea(viewData.fromX, viewData.fromY, viewData.movePlayer, viewData.fromKomaType, viewData.reverse);
             }
-        }
+        };
 
         this.onbeforeupdate = (vnode, old) => {
             if(viewData.state === STATE.INPUT) {
@@ -1500,7 +1531,7 @@ class ShogiBan extends ComponentBasic {
                 this.area = kifuData.makeMoveArea(viewData.fromX, viewData.fromY, viewData.movePlayer, viewData.fromKomaType, viewData.reverse);
                 return true;
             }
-        }
+        };
 
         this.view = (vnode) => {
 
@@ -1567,8 +1598,8 @@ class ShogiBan extends ComponentBasic {
                         this.boardComponentArray[y][x] = _.cloneDeep(this.getKomaComponent(this.board[y][x], x, y, this.viewData, this.kifuData));
                     }
                 }
-            })
-        })
+            });
+        });
 
         /*
         if(changeState) {
@@ -1588,15 +1619,15 @@ class ShogiBan extends ComponentBasic {
             _.each( this.board, (boardRow: Array<Object>, y: number) => {
                 _.each(boardRow, (koma: Object, x: number) => {
                     this.boardComponentArray[y][x] = this.getKomaComponent(this.board[y][x], x, y, this.viewData, this.kifuData);
-                })
-            })
+                });
+            });
         }   
     }
 
     private getKomaComponent(koma , x, y, viewData, kifuData): ComponentBasic {
         if(viewData.state === STATE.NORMAL || viewData.state === STATE.READONLY) {
             const isFocus = !(viewData.reverse) ? kifuData.isFocus(x, y) : kifuData.isFocus(x, y, true);
-            if(isFocus){
+            if(isFocus) {
                 // focus時はfocusして表示
                 return new Koma(SHOGI.Info.komaAtoi(koma['kind']), koma['color'], 1, viewData, kifuData, x, y, MARK.RED);
             }
@@ -1606,8 +1637,8 @@ class ShogiBan extends ComponentBasic {
                 return new Koma(SHOGI.Info.komaAtoi(koma['kind']), koma['color'], 1, viewData, kifuData, x, y, MARK.RED);
             }
             return new Koma(SHOGI.Info.komaAtoi(koma['kind']), koma['color'], 1, viewData, kifuData, x, y);
-        }else if(viewData.state === STATE.NARIINPUT){
-            if(viewData.nariX === x && viewData.nariY === y){
+        }else if(viewData.state === STATE.NARIINPUT) {
+            if(viewData.nariX === x && viewData.nariY === y) {
                 return new Koma(SHOGI.Info.komaAtoi(koma['kind']), koma['color'], 1, viewData, kifuData, x, y, MARK.NONE, true);
             }
             return new Koma(SHOGI.Info.komaAtoi(koma['kind']), koma['color'], 1, viewData, kifuData, x, y);
@@ -1654,7 +1685,8 @@ class CreateMenu extends ComponentBasic {
             '平手',
             '駒落ち',
             'カスタム'
-        ]
+        ];
+
         this.komaochiTypes = SHOGI.Info.komaochiTypes;
         this.kifuTypes = [
             '棋譜',
@@ -1683,7 +1715,7 @@ class CreateMenu extends ComponentBasic {
                                         })
                                     }, [
                                         _.map(this.initBoardTypes, (value) => {
-                                            return m('option', value)
+                                            return m('option', value);
                                         })
                                     ])
                                 ])
@@ -1722,7 +1754,7 @@ class CreateMenu extends ComponentBasic {
                                             })
                                         }, [
                                             _.map(this.komaochiTypes, (value) => {
-                                                return m('option', value)
+                                                return m('option', value);
                                             })
                                         ])
                                     ])
@@ -1744,7 +1776,7 @@ class CreateMenu extends ComponentBasic {
                                         })
                                     }, [
                                         _.map(this.kifuTypes, (value) => {
-                                            return m('option', value)
+                                            return m('option', value);
                                         })
                                     ])
                                 ])
@@ -1806,14 +1838,13 @@ class CreateMenu extends ComponentBasic {
                                                     // 後手
                                                     preset = 'OTHER';
                                                 }
-                                                break;
-                                            case SHOGI.BAN.CUSTOM:
+                                                break;   
+                                            default:
                                                 // カスタムの場合はこのボタンから遷移しえない
                                                 throw new KifuError('自由配置の棋譜はcustomcreateステートを経由する必要があります。');
                                         }
 
                                         const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? 'KIFU' : 'JOSEKI';
-                                        console.log(this.kifuTypeIndex);
 
                                         this.viewData.switchEditStart(preset, kifuType);
                                     }
@@ -1842,7 +1873,7 @@ class CreateMenu extends ComponentBasic {
                             if(_.has(koma, 'color')) {
                                 koma['color'] = 1 - koma['color'];
                             }
-                        })
+                        });
                     });
                     this.viewData.createBoard = 
                     _.map(_.reverse(this.viewData.createBoard), (boardRow) => {
@@ -1863,6 +1894,8 @@ class CreateMenu extends ComponentBasic {
                     [{}, {}, {}, {}, {}, {}, {}, {}, {}]
                 ];
                 break;
+            default:
+                throw new KifuError('未知のボードタイプです。');
         }
     }
 }
@@ -1875,8 +1908,11 @@ export default class KifuApp extends ComponentBasic {
     // 棋譜のデータ
     private kifuData: KifuData;
 
-    //表示用プロパティ
+    // 表示用プロパティ
     private viewData: ViewData;
+
+    // Firebaseマネージャー
+    private fbManager: FirebaseManager;
 
     // 将棋盤
     private shogiBan: ShogiBan;
@@ -1909,7 +1945,7 @@ export default class KifuApp extends ComponentBasic {
             // 初期状態でfocusさせる
             const elm = vnode.dom as HTMLElement;
             elm.focus();
-        }
+        };
 
         this.onupdate = () => {
             if(this.viewData.state === STATE.EDITSTART) {
@@ -1933,7 +1969,7 @@ export default class KifuApp extends ComponentBasic {
 
                 m.redraw();
             }
-        }
+        };
 
         this.view = (vnode) => {
             return [
@@ -1942,7 +1978,7 @@ export default class KifuApp extends ComponentBasic {
                     tabindex: 1,
                     onkeydown: (e: KeyboardEvent) => {
                         if(mode === SHOGI.MODE.VIEW || mode === SHOGI.MODE.EDIT) {
-                            switch(e.keyCode){
+                            switch(e.keyCode) {
                                 case 37:
                                     this.kifuData.moveNum--;
 
@@ -1960,6 +1996,8 @@ export default class KifuApp extends ComponentBasic {
                                         this.viewData.switchNormal();
                                     }
                                     m.redraw();
+                                    break;
+                                default:
                                     break;
                             }
                         }
@@ -2007,7 +2045,7 @@ export default class KifuApp extends ComponentBasic {
         this.createMenu = (mode === SHOGI.MODE.CREATE) ? new CreateMenu(this.kifuData, this.viewData, mode) : null;
 
         // 編集モードで棋譜が初期盤面からのみの場合最初から編集モードに移行する
-        if(mode == SHOGI.MODE.EDIT && _.size(this.kifuData.moveArray) === 1) {
+        if(mode === SHOGI.MODE.EDIT && _.size(this.kifuData.moveArray) === 1) {
             this.viewData.switchInput(this.kifuData.moveNum, this.kifuData.color);
         }
     }

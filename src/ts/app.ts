@@ -1,12 +1,13 @@
 import * as m from 'mithril';
 import * as firebase from 'firebase';
+import FirebaseManager from './firebaseManager';
 
 import '../scss/main.scss';
 import KifuApp from './kifuApp';
 import * as SHOGI from './shogi';
 
 class KifuControlApp {
-    constructor(jkfData: Object ,mode: number) {
+    constructor(jkfData: Object, mode: number) {
 
         window.onload = () => {
             m.route(document.body, '/', {'/': new KifuApp(jkfData, mode)});
@@ -80,12 +81,18 @@ const jkfData = {
     ]
 };
 
+// jkfDataのロード処理
+const fbmanager = FirebaseManager.sharedManager;
+//fbmanager.login();
+fbmanager.anonymusLogin();
+console.log('oh kifu loaded');
+
 // 閲覧モード
 // new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
 
 // 編集モード
-// new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
+ new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
 // new KifuControlApp({}, SHOGI.MODE.EDIT);
 
 // 新規作成モード
- new KifuControlApp({}, SHOGI.MODE.CREATE);
+// new KifuControlApp({}, SHOGI.MODE.CREATE);
