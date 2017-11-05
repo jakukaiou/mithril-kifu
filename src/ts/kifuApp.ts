@@ -103,7 +103,7 @@ class ViewData {
     public initBoardPreset: string;
 
     // 棋譜タイプ
-    public kifuType: string;
+    public kifuType: number;
 
     // 棋譜タイトル
     public kifuTitle: string;
@@ -132,7 +132,7 @@ class ViewData {
 
         this.initBoardPreset = 'HIRATE';
 
-        this.kifuType = 'KIFU';
+        this.kifuType = SHOGI.LIST.KIFU;
 
         this.kifuTitle = 'TITLE';
 
@@ -197,7 +197,7 @@ class ViewData {
     }
 
     // CUSTOMCREATEにスイッチ
-    public switchCustomCreate(kifuType: string = this.kifuType, kifuTitle: string = '') {
+    public switchCustomCreate(kifuType: number = this.kifuType, kifuTitle: string = '') {
         if(this.state !== STATE.CREATE && this.state !== STATE.CUSTOMTOINPUT && this.state !== STATE.CUSTOMBANEDIT) {
             return;
         }
@@ -314,7 +314,7 @@ class ViewData {
     }
 
     // EDITSTARTにスイッチ
-    public switchEditStart(preset: string, kifuType: string, kifuTitle: string) {
+    public switchEditStart(preset: string, kifuType: number, kifuTitle: string) {
 
         this.state = STATE.EDITSTART;
         this.initBoardPreset = preset;
@@ -1828,7 +1828,7 @@ class CreateMenu extends ComponentBasic {
                                     class: c('button', 'is-danger'),
                                     onclick: () => {
                                         // 盤面入力ステートへ
-                                        const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? 'KIFU' : 'JOSEKI';
+                                        const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? SHOGI.LIST.KIFU : SHOGI.LIST.JOSEKI;
 
                                         this.viewData.switchCustomCreate(kifuType, this.kifuTitle);
                                     }
@@ -1884,7 +1884,7 @@ class CreateMenu extends ComponentBasic {
                                                 throw new KifuError('自由配置の棋譜はcustomcreateステートを経由する必要があります。');
                                         }
 
-                                        const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? 'KIFU' : 'JOSEKI';
+                                        const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? SHOGI.LIST.KIFU : SHOGI.LIST.JOSEKI;
 
                                         this.viewData.switchEditStart(preset, kifuType, this.kifuTitle);
                                     }
@@ -1997,7 +1997,7 @@ export default class KifuApp extends ComponentBasic {
                 // ここで新規作成時のjkfObjct作成処理
 
                 let kifuType: number = SHOGI.LIST.KIFU;
-                if(this.viewData.kifuType === 'JOSEKI') {
+                if(this.viewData.kifuType === SHOGI.LIST.JOSEKI) {
                     kifuType = SHOGI.LIST.JOSEKI;
                 }
 

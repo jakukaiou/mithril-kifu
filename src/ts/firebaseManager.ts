@@ -67,6 +67,7 @@ export default class FirebaseManager {
             if(_.isNull(this.auth.currentUser)) {
                 return null;
             }else {
+                /*
                 const providerId = this.auth.currentUser.providerData[0].providerId;
                 let provider = 'question';
 
@@ -75,6 +76,7 @@ export default class FirebaseManager {
                 }else if(providerId.match(/google/)) {
                     provider = 'google';
                 }
+                */
 
                 this.username = userdata['username'];
 
@@ -83,7 +85,7 @@ export default class FirebaseManager {
                     name: userdata['username'],
                     posts: userdata['posts'],
                     stars: userdata['stars'],
-                    provider: provider
+                    //provider: provider
                 };
             }
         })

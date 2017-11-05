@@ -154,6 +154,7 @@ export default class BoardHeader extends ComponentBasic {
                                                             }
                                                         }, 'ログアウト'),
                                                         m('hr', { class: c('dropdown-divider') }),
+                                                        /*
                                                         m('div', { class: c('dropdown-item') }, [
                                                             m('p', [
                                                                 m('strong', 'Login Type:'),
@@ -163,6 +164,7 @@ export default class BoardHeader extends ComponentBasic {
                                                             ])
                                                         ]),
                                                         m('hr', { class: c('dropdown-divider') }),
+                                                        */
                                                         m('div', { class: c('dropdown-item') }, [
                                                             m('p', [
                                                                 m('strong', '投稿数:'),

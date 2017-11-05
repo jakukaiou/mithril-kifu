@@ -327,11 +327,14 @@ export default class KifuData {
         this.makeInitialMove();
 
         // 棋譜か定跡か
+        /*
         if (_.isEmpty(this.forkPoints)) {
             this.listmode = SHOGI.LIST.KIFU;
         } else {
             this.listmode = SHOGI.LIST.JOSEKI;
         }
+        */
+        this.listmode = SHOGI.LIST.KIFU;
 
         // 平手状態
         this.initBoard = _.cloneDeep(SHOGI.Info.hirateBoard);
@@ -413,6 +416,8 @@ export default class KifuData {
                     'preset': jkfData['initial']['preset'],
                     'mode': jkfData['initial']['mode']
                 }
+
+                this.listmode = jkfData['initial']['mode'];
 
                 if(jkfData['initial']['preset'] === 'OTHER') {
                     // colorはNumberなので値渡し
@@ -1859,4 +1864,5 @@ export default class KifuData {
     // TODO: header情報の編集、保存実装
     // TODO: grid回転実装
     // TODO: 投稿から遷移時に初期化されない問題を解決
+    // TODO: 分岐をもつ指し手の削除時のエラーを解決
 }
