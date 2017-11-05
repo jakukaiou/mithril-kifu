@@ -9,6 +9,7 @@
     color: #fff;
     background-color: #141414;
     height: 18px;
+    padding-left: 8px;
 }
 
 .c-kifu_list {
@@ -137,4 +138,9 @@
 
 .c-kifu_blackOut.is-active {
     display: block;
+}
+
+.c-kifu_loading {
+    height: 532px;
+    margin: 20px;
 }

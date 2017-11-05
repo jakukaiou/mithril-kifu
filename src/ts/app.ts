@@ -6,12 +6,31 @@ import '../scss/main.scss';
 import KifuApp from './kifuApp';
 import * as SHOGI from './shogi';
 
-class KifuControlApp {
-    constructor(jkfData: Object, mode: number) {
+import BoardTop from './top';
+import BoardCreate from './create';
+import BoardView from './view';
+import BoardEdit from './edit';
+import BoardSearch from './search';
+import BoardPostList from './postList';
+import BoardStarList from './starList';
 
-        window.onload = () => {
-            m.route(document.body, '/', {'/': new KifuApp(jkfData, mode)});
-        };
+import UserInit from './userInit';
+
+class BoardApp {
+    constructor(jkfData: Object, mode: number) {
+        //m.route(document.body, '/', {'/': new KifuApp(jkfData, mode)});
+
+        //m.route.prefix('');
+        m.route(document.body, '/', {
+            '/'             : new BoardTop(),
+            '/init'         : new UserInit(),
+            '/create'       : new BoardCreate(),
+            '/view/:id'     : new BoardView(),
+            '/edit/:id'     : new BoardEdit(),
+            '/posts'        : new BoardPostList(),
+            '/stars'        : new BoardStarList(),
+            '/search/:word' : new BoardSearch(),
+        });
     }
 }
 
@@ -81,18 +100,31 @@ const jkfData = {
     ]
 };
 
-// jkfDataのロード処理
+// jkfDataのログイン、ロード処理
+/*
 const fbmanager = FirebaseManager.sharedManager;
 //fbmanager.login();
 fbmanager.anonymusLogin();
-console.log('oh kifu loaded');
 
-// 閲覧モード
-// new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
 
-// 編集モード
- new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
-// new KifuControlApp({}, SHOGI.MODE.EDIT);
+fbmanager.kifuLoad(1).then((json) =>{
+    console.log('oh kifu loaded');
 
-// 新規作成モード
-// new KifuControlApp({}, SHOGI.MODE.CREATE);
+    m.route(document.body, '/', {'/': new KifuApp(json, SHOGI.MODE.EDIT)});
+})
+*/
+
+window.onload = () => {
+    // 閲覧モード
+    // new KifuControlApp(jkfData, SHOGI.MODE.VIEW);
+
+    // 編集モード
+    new BoardApp({}, SHOGI.MODE.EDIT);
+    // new KifuControlApp(jkfData, SHOGI.MODE.EDIT);
+
+
+    // 新規作成モード
+    //m.route(document.body, '/', {'/': new KifuApp(jkfData, SHOGI.MODE.EDIT)});
+};
+
+

@@ -1,0 +1,17 @@
+.hero .c-kifu_hero {
+    padding: 1.8rem 1.5rem;
+}
+
+.c-kifu_hero_star_base {
+    padding-top: 10px;
+}
+
+.tag.c-kifu_hero_star {
+    background-color: #363636;
+    color: rgb(185, 170, 170);
+    cursor: pointer;
+}
+
+.tag.c-kifu_hero_star.is-active {
+    color: yellow;
+}

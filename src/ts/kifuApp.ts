@@ -105,6 +105,9 @@ class ViewData {
     // 棋譜タイプ
     public kifuType: string;
 
+    // 棋譜タイトル
+    public kifuTitle: string;
+
     constructor(mode: number) {
         this.reverse = false;
 
@@ -130,6 +133,8 @@ class ViewData {
         this.initBoardPreset = 'HIRATE';
 
         this.kifuType = 'KIFU';
+
+        this.kifuTitle = 'TITLE';
 
         if(mode === SHOGI.MODE.CREATE) {
             this.unsetPieces = {
@@ -192,13 +197,14 @@ class ViewData {
     }
 
     // CUSTOMCREATEにスイッチ
-    public switchCustomCreate(kifuType: string = this.kifuType) {
+    public switchCustomCreate(kifuType: string = this.kifuType, kifuTitle: string = '') {
         if(this.state !== STATE.CREATE && this.state !== STATE.CUSTOMTOINPUT && this.state !== STATE.CUSTOMBANEDIT) {
             return;
         }
 
         this.state = STATE.CUSTOMCREATE;
         this.kifuType = kifuType;
+        this.kifuTitle = kifuTitle;
         this.initBoardPreset = 'OTHER';
     }
 
@@ -308,10 +314,11 @@ class ViewData {
     }
 
     // EDITSTARTにスイッチ
-    public switchEditStart(preset: string, kifuType: string) {
+    public switchEditStart(preset: string, kifuType: string, kifuTitle: string) {
 
         this.state = STATE.EDITSTART;
         this.initBoardPreset = preset;
+        this.kifuTitle = kifuTitle;
         this.kifuType = kifuType;
     }
 
@@ -751,7 +758,7 @@ class KifuList extends ComponentBasic {
         this.view = () => {
             return [
                 m('div', {class: c('c-kifu_container')}, [
-                    m('div', {class: c('c-kifu_title')}, '棋譜情報'),
+                    m('div', {class: c('c-kifu_title')}, kifuData.title),
                     m('div', {class: c('c-kifu_listContainer')}, [
                         m('div', {
                             class: c('c-kifu_list'),
@@ -788,12 +795,14 @@ class KifuList extends ComponentBasic {
                                                 m('span', 
                                                 {
                                                     class: c('c-kifu_notation_branch', 'icon', 'is-small'),
-                                                    onclick: () => {
+                                                    onclick: (e: MouseEvent) => {
                                                         // 分岐棋譜の表示処理
-                                                        console.log('分岐棋譜を表示');
+                                                        console.log('oh disp forklist');
                                                         viewData.openFork = true;
                                                         this.selectMoves = kifuData.getForkList(num);
                                                         this.forkPoint = num;
+
+                                                        e.stopPropagation();
                                                     }
                                                 },[
                                                     m('i',{class: c('fa', 'fa-clone')})
@@ -843,8 +852,6 @@ class KifuList extends ComponentBasic {
                                                         this.forkPoint = num;
 
                                                         e.stopPropagation();
-
-                                                        console.log(this.selectMoves);
                                                     }
                                                 },[
                                                     m('i',{class: c('fa', 'fa-clone')})
@@ -1043,7 +1050,7 @@ class KifuList extends ComponentBasic {
  */
 class ToolButton extends ComponentBasic {
 
-    constructor(faClass: string, onclickFunc: Function, isSmall: boolean, active: boolean = true, blClass: string = null) {
+    constructor(faClass: string, onclickFunc: Function, isSmall: boolean, active: boolean = true, blClass: string = null, lotate: number = 0) {
         super();
 
         this.view = () => {
@@ -1054,7 +1061,7 @@ class ToolButton extends ComponentBasic {
                     onclick: active ? onclickFunc : null
                 }, [
                     m('span', {class: c('icon', (isSmall) ? 'is-small' : null)}, [
-                        m('i', {class: c('fa', faClass)})
+                        m('i', {class: c('fa', faClass, (lotate) ? 'fa-rotate-' + lotate.toString() : null)})
                     ])
                 ]),
             ]; 
@@ -1067,7 +1074,7 @@ class ToolButton extends ComponentBasic {
  */
 class KifuToolBar extends ComponentBasic {
 
-    constructor(kifuData: KifuData, viewData: ViewData, mode: number) {
+    constructor(kifuData: KifuData, viewData: ViewData, mode: number, kifuID: string) {
         super();
 
         let commentNum = 0;
@@ -1157,11 +1164,17 @@ class KifuToolBar extends ComponentBasic {
                         }, true, playable)),
                     ]),
                     m('div', {class: c('c-tool_button_container')}, [
-                        m(new ToolButton('fa-street-view', () => {
+                        m(new ToolButton('fa-exchange', () => {
                             // 盤面の反転処理
                             viewData.reverse = !(viewData.reverse);
                             m.redraw();
-                        }, false, true, (viewData.reverse) ? 'is-success': null)),
+                        }, false, true, (viewData.reverse) ? 'is-success': null, 90)),
+                        /*
+                        m(new ToolButton('fa-info-circle', () => {
+                            // 棋譜情報の表示処理
+                            console.log('棋譜情報を表示')
+                        }, false))
+                        */
                     ])
                 ])
                 :
@@ -1215,18 +1228,27 @@ class KifuToolBar extends ComponentBasic {
                         }, true, playable)),
                     ]),
                     m('div', {class: c('c-tool_button_container')}, [
-                        m(new ToolButton('fa-street-view', () => {
+                        m(new ToolButton('fa-exchange', () => {
                             // 盤面の反転処理
                             viewData.reverse = !(viewData.reverse);
                             m.redraw();
-                        }, false, true, (viewData.reverse) ? 'is-success': null)),
+                        }, false, true, (viewData.reverse) ? 'is-success': null, 90)),
+                        m(new ToolButton('fa-info-circle', () => {
+                            // 棋譜情報の表示処理
+                            console.log('棋譜情報を表示')
+                        }, false)),
                         m(new ToolButton('fa-floppy-o', () => {
                             // 棋譜の保存処理
 
                             const fbManager = FirebaseManager.sharedManager;
-                            fbManager.kifuSave(kifuData.createJkfObj());
+                            fbManager.kifuSave(kifuData.createJkfObj(), kifuID).then(
+                                () => {
+                                    // トップページに戻る (viewページに行ったほうがいい？)
+                                    m.route.set('/');
+                                }
+                            );
 
-                        }, true, playable))
+                        }, true, playable, 'is-danger'))
                     ]),
                 ])
                 :
@@ -1303,7 +1325,7 @@ class Mochigoma extends ComponentBasic {
                             onclick: () => {
                                 console.log('盤面編集完了');
 
-                                viewData.switchEditStart('OTHER', viewData.kifuType);
+                                viewData.switchEditStart('OTHER', viewData.kifuType, viewData.kifuTitle);
                             }
                         },[
                             m('div', {
@@ -1664,6 +1686,8 @@ class CreateMenu extends ComponentBasic {
     private viewData: ViewData;
     private kifuData: KifuData;
 
+    private kifuTitle: string;
+
     private isChecked: boolean;
 
     private initBoardTypes: Array<string>;
@@ -1679,6 +1703,7 @@ class CreateMenu extends ComponentBasic {
         this.viewData = viewData;
         this.kifuData = kifuData;
 
+        this.kifuTitle = '';
         this.isChecked = true;
 
         this.initBoardTypes = [
@@ -1703,6 +1728,20 @@ class CreateMenu extends ComponentBasic {
                     m('div', {class: c('c-shogiBan_menu_base')},[
                         m('label', {class: c('label', 'c-shogiBan_menu_label', 'is-main')}, '新規作成'),
                         m('div', {class: c('field', 'c-shogiBan_menu_option')}, [
+                            m('label', {class: c('label', 'c-shogiBan_menu_label')}, 'タイトル(必須)'),
+                            m('div', {class: c('field')}, 
+                                m('div', {class: c('control')}, [
+                                    m('input', {
+                                        class: c('input', 'is-primary'),
+                                        type: 'text',
+                                        value: this.kifuTitle,
+                                        placeholder: '棋譜タイトルを入力',
+                                        oninput: m.withAttr('value', (title) => {
+                                            this.kifuTitle = title
+                                        })
+                                    })
+                                ])
+                            ),
                             m('label', {class: c('label', 'c-shogiBan_menu_label')}, '初期盤面'),
                             m('div', {class: c('control')}, [
                                 m('div', {class: c('select')}, [
@@ -1791,12 +1830,13 @@ class CreateMenu extends ComponentBasic {
                                         // 盤面入力ステートへ
                                         const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? 'KIFU' : 'JOSEKI';
 
-                                        this.viewData.switchCustomCreate(kifuType);
+                                        this.viewData.switchCustomCreate(kifuType, this.kifuTitle);
                                     }
                                 }, '盤面入力へ')
                                 :
                                 m('div', {
                                     class: c('button', 'is-primary'),
+                                    disabled: (this.kifuTitle) ? false : true,
                                     onclick: () => {
                                         // 棋譜編集モードへ
                                         let preset = 'HIRATE';
@@ -1846,7 +1886,7 @@ class CreateMenu extends ComponentBasic {
 
                                         const kifuType = (this.kifuTypeIndex === SHOGI.LIST.KIFU) ? 'KIFU' : 'JOSEKI';
 
-                                        this.viewData.switchEditStart(preset, kifuType);
+                                        this.viewData.switchEditStart(preset, kifuType, this.kifuTitle);
                                     }
                                 }, '作成する') 
                             ])
@@ -1925,6 +1965,9 @@ export default class KifuApp extends ComponentBasic {
 
     // 新規作成メニュー
     private createMenu: CreateMenu;
+
+    // 棋譜ID (既存の棋譜を編集する場合)
+    private kifuID: string;
     
 
     /**
@@ -1933,13 +1976,15 @@ export default class KifuApp extends ComponentBasic {
      * @param jkfData: JSONフォーマットの棋譜形式
      * 
      */
-    constructor(jkfData: Object, mode: number) {
+    constructor(jkfData: Object, mode: number, kifuID: string = null) {
         super();
 
         // TODO: 編集モードの作成
         // TODO: スクロール時の位置合わせ
 
-        this.createInitData(jkfData, mode);
+        this.kifuID = kifuID;
+
+        this.createInitData(jkfData, mode, this.kifuID);
 
         this.oncreate = (vnode) => {
             // 初期状態でfocusさせる
@@ -1950,10 +1995,19 @@ export default class KifuApp extends ComponentBasic {
         this.onupdate = () => {
             if(this.viewData.state === STATE.EDITSTART) {
                 // ここで新規作成時のjkfObjct作成処理
+
+                let kifuType: number = SHOGI.LIST.KIFU;
+                if(this.viewData.kifuType === 'JOSEKI') {
+                    kifuType = SHOGI.LIST.JOSEKI;
+                }
+
                 let jkfObject = {
+                    header: {
+                        title: this.viewData.kifuTitle
+                    },
                     initial: {
                         'preset': this.viewData.initBoardPreset,
-                        'mode'  : this.viewData.kifuType
+                        'mode'  : kifuType
                     }
                 };
 
@@ -1965,7 +2019,7 @@ export default class KifuApp extends ComponentBasic {
                     };
                 }
 
-                this.createInitData(jkfObject, SHOGI.MODE.EDIT);
+                this.createInitData(jkfObject, SHOGI.MODE.EDIT, this.kifuID);
 
                 m.redraw();
             }
@@ -2027,7 +2081,7 @@ export default class KifuApp extends ComponentBasic {
         };
     }
 
-    public createInitData(jkfData: Object, mode: number) {
+    public createInitData(jkfData: Object, mode: number, kifuID: string) {
         this.kifuData = new KifuData(jkfData, mode);
 
         this.viewData = new ViewData(mode);
@@ -2039,7 +2093,7 @@ export default class KifuApp extends ComponentBasic {
         this.kifuList = new KifuList(this.kifuData, this.viewData, mode);
 
         // 棋譜プレイヤー操作ツールバーのViewコンポーネントを作成
-        this.toolbar = new KifuToolBar(this.kifuData, this.viewData, mode);
+        this.toolbar = new KifuToolBar(this.kifuData, this.viewData, mode, kifuID);
 
         // 棋譜新規作成メニューのコンポーネントを作成
         this.createMenu = (mode === SHOGI.MODE.CREATE) ? new CreateMenu(this.kifuData, this.viewData, mode) : null;
@@ -2048,5 +2102,7 @@ export default class KifuApp extends ComponentBasic {
         if(mode === SHOGI.MODE.EDIT && _.size(this.kifuData.moveArray) === 1) {
             this.viewData.switchInput(this.kifuData.moveNum, this.kifuData.color);
         }
+
+        console.log('kifuID', kifuID);
     }
 }

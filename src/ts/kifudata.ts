@@ -306,6 +306,9 @@ export default class KifuData {
     // 初期の持ち駒
     private initHands;
 
+    // 棋譜のタイトル
+    private _title;
+
     constructor(jkfData: Object, mode: number) {
 
         this.mode = mode;
@@ -408,11 +411,9 @@ export default class KifuData {
 
                 this.initInfo = {
                     'preset': jkfData['initial']['preset'],
-
+                    'mode': jkfData['initial']['mode']
                 }
 
-                this.initInfo = {};
-                this.initInfo['preset'] = jkfData['initial']['preset'];
                 if(jkfData['initial']['preset'] === 'OTHER') {
                     // colorはNumberなので値渡し
                     this.initInfo['data'] = {
@@ -436,6 +437,15 @@ export default class KifuData {
             // 平手は代入済
         }
 
+        // 棋譜情報が登録されているか判定
+        if (_.has(jkfData, 'header')) {
+            if(_.has(jkfData['header'], 'title')) {
+                this._title = jkfData['header']['title'];
+            }else {
+                this._title = '棋譜情報';
+            }
+        }
+
         // 初期盤面を現在盤面にコピー
         this._board = _.cloneDeep(this.initBoard);
         this._hands = _.cloneDeep(this.initHands);
@@ -446,12 +456,15 @@ export default class KifuData {
     /**
      * jkfオブジェクトを作成する
      */
-    // TODO: headerDataの保存
     public createJkfObj():Object {
         const jkfObj:Object = {};
 
         if(this.initInfo) {
             jkfObj['initial'] = this.initInfo;
+        }
+
+        jkfObj['header'] = {
+            title: this.title
         }
 
         jkfObj['moves'] = this.moves;
@@ -657,6 +670,13 @@ export default class KifuData {
      */
     public get board(): Array<Array<Object>> {
         return this._board;
+    }
+
+    /**
+     * 棋譜のタイトルを返す
+     */
+    public get title(): string {
+        return this._title;
     }
 
     /**
@@ -1837,4 +1857,6 @@ export default class KifuData {
     // TODO: ストレージのjsonのロード実装
     // TODO: ツールチップの表示
     // TODO: header情報の編集、保存実装
+    // TODO: grid回転実装
+    // TODO: 投稿から遷移時に初期化されない問題を解決
 }

@@ -1,0 +1,105 @@
+.c-kifu_info {
+    transition: 0.3s;
+}
+
+.message.is-close {
+    opacity: 0;
+}
+
+article.tile {
+    padding: 0.75rem 0.75rem 0.5rem 0.5rem;
+}
+
+article.tile h4.title {
+    margin-bottom: 0.5rem;
+}
+
+article .columns {
+    padding: 0.25rem;
+}
+
+article .column {
+    padding: 0.5rem;
+}
+
+.c-kifu_box_post {
+    font-size: 12px;
+}
+
+.c-kifu_box {
+    border: none;
+    border-radius: 4px;
+    min-width: 192px;
+    max-height: 160px;
+    background-color: #fff;
+}
+
+.c-kifu_box .c-kifu_box_header {
+    padding: 0.25em;
+}
+
+.c-kifu_box_title {
+    padding: 0;
+}
+
+.c-kifu_box_type {
+    font-size: 12px;
+}
+
+.c-kifu_box_description {
+    font-size: 13px;
+    padding: 0.15em;
+    height: 60px;
+}
+
+.c-kifu_box_description .content {
+    margin-bottom: 0.25em;
+}
+
+.c-kifu_box_tags {
+    padding-left: 0.15em;
+}
+
+.c-kifu_box_tags .tag {
+    margin-right: 0.15em;
+}
+
+.c-kifu_box_footer {
+    display: flex;
+    align-items: stretch;
+    -webkit-box-align: stretch;
+}
+
+.c-kifu_box_star {
+    font-size: 12px;
+}
+
+.c-kifu_box_contributor {
+    padding: 0.15em;
+    font-size: 12px;
+    margin-left: auto;
+}
+
+.c-adArea {
+    width: 728px;
+    height: 90px;
+    background-color: #c7def3;
+}
+
+.c-config_group {
+    margin-top: 1.75rem;
+    padding-left: 0.5rem;
+}
+
+.c-config_group .title {
+    margin-bottom: 0.5rem;
+}
+
+.c-footer_base {
+    background-color: #283e69;
+    color: #c7def3;
+}
+
+.c-footer_base a {
+    color: #4293fc;
+}

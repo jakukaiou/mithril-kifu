@@ -8,12 +8,15 @@
 @import 'shogiBan';
 @import 'toolbar';
 @import 'kifu';
+@import 'kifuHeader';
 @import 'create';
+@import 'header';
+@import 'top';
+@import 'kifuList';
 
 // 棋譜表示コンポーネントのコンテナ
 .c-kifuPlayer {
-    margin-top: 20px;
-    margin-left: 20px;
+    margin: 20px;
     width: 756px;
     height: 532px;
     position: relative;
